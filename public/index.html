@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Watch Later — Live & Grouped</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-soft: #171a23;
+    --card: #1c2029;
+    --card-hover: #232833;
+    --border: #2a2f3d;
+    --text: #e7eaf3;
+    --muted: #8b93a7;
+    --accent: #6c8cff;
+    --accent-2: #a06cff;
+    --danger: #ff5f6d;
+    --success: #34d399;
+    --warn: #fbbf24;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(1000px 600px at 15% -10%, #1d2340 0%, transparent 55%),
+                radial-gradient(900px 500px at 100% 0%, #2a1d40 0%, transparent 50%),
+                var(--bg);
+    color: var(--text);
+    padding: 40px 20px 80px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app { width: 100%; max-width: 820px; }
+
+  /* ---------- Header ---------- */
+  header { margin-bottom: 22px; }
+
+  h1 {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h1 .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 18px var(--accent);
+  }
+
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 8px; }
+
+  .live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--success);
+    background: rgba(52, 211, 153, .1);
+    border: 1px solid rgba(52, 211, 153, .25);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-top: 12px;
+  }
+  .live-pill.disconnected {
+    color: var(--danger);
+    background: rgba(255, 95, 109, .1);
+    border-color: rgba(255, 95, 109, .25);
+  }
+  .live-pill .beacon {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, .7);
+    animation: beacon 1.8s infinite;
+  }
+  .live-pill.disconnected .beacon {
+    background: var(--danger);
+    animation: none;
+    box-shadow: none;
+  }
+  @keyframes beacon {
+    0%   { box-shadow: 0 0 0 0 rgba(52,211,153,.7); }
+    70%  { box-shadow: 0 0 0 9px rgba(52,211,153,0); }
+    100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+  }
+
+  /* ---------- Add form ---------- */
+  .add-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin: 22px 0 0;
+    transition: border-color .2s;
+  }
+  .add-form:focus-within { border-color: var(--accent); }
+
+  .inputs { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
+  input[type="text"] {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    padding: 4px 2px;
+  }
+  input::placeholder { color: #5c6478; }
+
+  .divider { height: 1px; background: var(--border); margin: 2px 0; }
+
+  .add-btn {
+    align-self: stretch;
+    padding: 0 22px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform .15s, filter .2s;
+  }
+  .add-btn:hover { filter: brightness(1.12); }
+  .add-btn:active { transform: scale(.97); }
+  .add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* LIVE PREVIEW */
+  .live-preview {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height .3s ease, opacity .25s ease, margin .3s ease;
+    margin-top: 0;
+  }
+  .live-preview.show {
+    max-height: 100px;
+    opacity: 1;
+    margin-top: 10px;
+  }
+
+  .preview-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(108,140,255,.1), rgba(160,108,255,.07));
+    border: 1px dashed rgba(108,140,255,.45);
+    border-radius: 12px;
+    padding: 11px 14px;
+  }
+
+  .preview-card .favicon {
+    width: 30px; height: 30px; flex-shrink: 0;
+    border-radius: 8px;
+    background: #262b36;
+    display: grid; place-items: center;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  .preview-card .favicon img { width: 18px; height: 18px; }
+
+  .preview-card .p-meta { min-width: 0; flex: 1; }
+  .preview-card .p-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .preview-card .p-domain { font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+
+  .preview-badge {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(108,140,255,.14);
+    border: 1px solid rgba(108,140,255,.3);
+    padding: 3px 9px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  .group-hint {
+    font-size: 0.68rem;
+    color: var(--warn);
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 18px 0 16px;
+  }
+
+  .filters { display: flex; gap: 6px; background: var(--bg-soft); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
+
+  .filter-btn {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 7px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .filter-btn:hover { color: var(--text); }
+  .filter-btn.active { background: var(--card-hover); color: var(--text); }
+
+  .search {
+    flex: 1;
+    min-width: 160px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 14px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+  }
+  .search:focus { border-color: var(--accent); }
+  .search::placeholder { color: #5c6478; }
+
+  .view-toggle {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-soft);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .view-btn {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 7px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .view-btn:hover { color: var(--text); }
+  .view-btn.active { background: var(--card-hover); color: var(--text); }
+
+  /* ---------- List ---------- */
+  .list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    transition: background .2s, transform .15s, border-color .2s;
+    animation: pop .25s ease;
+  }
+  .item:hover { background: var(--card-hover); border-color: #38405a; }
+  .item.done { opacity: .55; }
+  .item.done .title { text-decoration: line-through; }
+
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .favicon {
+    width: 34px; height: 34px; flex-shrink: 0;
+    border-radius: 9px;
+    background: #262b36;
+    display: grid; place-items: center;
+    overflow: hidden;
+    font-size: 15px;
+  }
+  .favicon img { width: 20px; height: 20px; }
+
+  .meta { flex: 1; min-width: 0; }
+
+  .title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .title:hover { color: var(--accent); }
+
+  .domain {
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+  .icon-btn {
+    width: 34px; height: 34px;
+    display: grid; place-items: center;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background .2s, color .2s;
+  }
+  .icon-btn:hover { background: #2e3444; color: var(--text); }
+  .icon-btn.check:hover { color: var(--success); }
+  .icon-btn.del:hover   { color: var(--danger); }
+  .item.done .icon-btn.check { color: var(--success); }
+
+  /* ---------- GROUP STYLES ---------- */
+  .group {
+    background: rgba(23, 26, 35, .55);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    animation: pop .25s ease;
+  }
+
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .2s;
+  }
+  .group-header:hover { background: var(--card-hover); }
+
+  .group-favicon {
+    width: 32px; height: 32px; flex-shrink: 0;
+    border-radius: 9px;
+    background: #262b36;
+    display: grid; place-items: center;
+    overflow: hidden;
+    font-size: 15px;
+  }
+  .group-favicon img { width: 19px; height: 19px; }
+
+  .group-info { flex: 1; min-width: 0; }
+
+  .group-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .group-count {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(108,140,255,.14);
+    border: 1px solid rgba(108,140,255,.3);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  .group-sub {
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chevron {
+    color: var(--muted);
+    font-size: 0.9rem;
+    transition: transform .25s ease;
+    flex-shrink: 0;
+  }
+  .group.collapsed .chevron { transform: rotate(-90deg); }
+
+  .group-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 12px 12px 12px;
+    overflow: hidden;
+    transition: max-height .3s ease, opacity .25s ease, padding .3s ease;
+    max-height: 3000px;
+    opacity: 1;
+  }
+  .group.collapsed .group-body {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .group-body .item {
+    background: var(--card);
+    padding: 11px 13px;
+    border-radius: 11px;
+    animation: none;
+  }
+  .group-body .item .favicon { width: 28px; height: 28px; border-radius: 8px; font-size: 13px; }
+  .group-body .item .favicon img { width: 17px; height: 17px; }
+  .group-body .item .title { font-size: 0.9rem; }
+
+  /* ---------- Empty state ---------- */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+  .empty .big { font-size: 2.4rem; margin-bottom: 10px; }
+  .empty p { font-size: 0.9rem; }
+
+  .footer-note {
+    text-align: center;
+    color: #4d5468;
+    font-size: 0.78rem;
+    margin-top: 30px;
+  }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 560px) {
+    .add-form { grid-template-columns: 1fr; }
+    .add-btn { padding: 12px; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .filters, .view-toggle { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1><span class="dot"></span> Watch Later</h1>
+    <p class="subtitle">Save links live — automatically synced in real-time across all devices.</p>
+    <span class="live-pill" id="connStatus"><span class="beacon"></span> <span id="connText">Connecting...</span></span>
+  </header>
+
+  <form class="add-form" id="addForm" autocomplete="off" novalidate>
+    <div class="inputs">
+      <input type="text" id="urlInput" placeholder="Paste a link (e.g. github.com/user/repo)" />
+      <div class="divider"></div>
+      <input type="text" id="titleInput" placeholder="Title (optional — auto-filled from link)" />
+    </div>
+    <button type="submit" class="add-btn" id="addBtn" disabled>+ Add</button>
+  </form>
+
+  <div class="live-preview" id="livePreview">
+    <div class="preview-card">
+      <div class="favicon" id="pvFavicon">🔗</div>
+      <div class="p-meta">
+        <div class="p-title" id="pvTitle">Waiting for a link…</div>
+        <div class="p-domain" id="pvDomain"></div>
+        <div class="group-hint" id="pvGroupHint" style="display:none;"></div>
+      </div>
+      <span class="preview-badge">Live</span>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-filter="all">All <span id="countAll"></span></button>
+      <button class="filter-btn" data-filter="unread">Unread <span id="countUnread"></span></button>
+      <button class="filter-btn" data-filter="done">Done <span id="countDone"></span></button>
+    </div>
+    <input type="text" class="search" id="search" placeholder="Search saved links…" />
+    <div class="view-toggle" id="viewToggle">
+      <button class="view-btn active" data-view="flat" title="Flat list">☰ Flat</button>
+      <button class="view-btn" data-view="grouped" title="Group by domain">▦ Groups</button>
+    </div>
+  </div>
+
+  <ul class="list" id="list"></ul>
+
+  <p class="footer-note">Cloud Synced · <span id="total">0</span> items · <span id="groupCount">0</span> groups</p>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var VIEW_KEY = "watch-later-view";
+
+  var items  = [];
+  var filter = "all";
+  var query  = "";
+  var view   = localStorage.getItem(VIEW_KEY) || "flat";
+
+  var form        = document.getElementById("addForm");
+  var urlInput    = document.getElementById("urlInput");
+  var titleInput  = document.getElementById("titleInput");
+  var listEl      = document.getElementById("list");
+  var filtersEl   = document.getElementById("filters");
+  var searchEl    = document.getElementById("search");
+  var viewToggle  = document.getElementById("viewToggle");
+  var countAll    = document.getElementById("countAll");
+  var countUnread = document.getElementById("countUnread");
+  var countDone   = document.getElementById("countDone");
+  var totalEl     = document.getElementById("total");
+  var groupCountEl= document.getElementById("groupCount");
+  var addBtn      = document.getElementById("addBtn");
+
+  var livePreview = document.getElementById("livePreview");
+  var pvFavicon   = document.getElementById("pvFavicon");
+  var pvTitle     = document.getElementById("pvTitle");
+  var pvDomain    = document.getElementById("pvDomain");
+  var pvGroupHint = document.getElementById("pvGroupHint");
+
+  var connStatus  = document.getElementById("connStatus");
+  var connText    = document.getElementById("connText");
+
+  // Real-time Socket Connection
+  var socket = io();
+
+  socket.on('connect', function() {
+    connStatus.classList.remove('disconnected');
+    connText.textContent = "Live";
+    addBtn.disabled = false;
+  });
+
+  socket.on('disconnect', function() {
+    connStatus.classList.add('disconnected');
+    connText.textContent = "Offline";
+    addBtn.disabled = true;
+  });
+
+  socket.on('init', function(data) {
+    items = data;
+    render();
+  });
+
+  socket.on('itemAdded', function(item) {
+    if (!items.find(function(i) { return i.id === item.id; })) {
+      items.unshift(item);
+      render();
+    }
+  });
+
+  socket.on('itemUpdated', function(updatedItem) {
+    var it = items.find(function (i) { return i.id === updatedItem.id; });
+    if (it) {
+      it.done = updatedItem.done;
+      render();
+    }
+  });
+
+  socket.on('itemRemoved', function(id) {
+    items = items.filter(function (i) { return i.id !== id; });
+    render();
+  });
+
+  /* ---------- Helpers ---------- */
+  function normalizeUrl(raw) {
+    var url = String(raw).trim();
+    if (!url) return "";
+    if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(url)) {
+      url = "https://" + url;
+    }
+    return url;
+  }
+
+  function getHost(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ""); }
+    catch (e) { return url; }
+  }
+
+  function getGroupKey(url) {
+    try {
+      var host = new URL(url).hostname.replace(/^www\./, "");
+      var parts = host.split(".");
+      return parts.length > 2 ? parts.slice(-2).join(".") : host;
+    } catch (e) { return "other"; }
+  }
+
+  function faviconFor(url) {
+    try {
+      var host = new URL(url).hostname;
+      return "https://www.google.com/s2/favicons?domain=" + host + "&sz=64";
+    } catch (e) { return ""; }
+  }
+
+  function escapeHTML(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function timeAgo(ts) {
+    var s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return "just now";
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + "m ago";
+    var h = Math.floor(m / 60);
+    if (h < 24) return h + "h ago";
+    var d = Math.floor(h / 24);
+    return d + "d ago";
+  }
+
+  /* ---------- Actions ---------- */
+  function addItem(url, title) {
+    var cleanUrl = normalizeUrl(url);
+    if (!cleanUrl) return;
+    var host = getHost(cleanUrl);
+    var item = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      url: cleanUrl,
+      title: (title || "").trim() || host,
+      done: false,
+      addedAt: Date.now()
+    };
+    // Optimistic Update
+    items.unshift(item);
+    render();
+    // Emit to server
+    socket.emit('addItem', item);
+  }
+
+  function toggleDone(id) {
+    var it = items.find(function (i) { return i.id === id; });
+    if (it) { 
+      it.done = !it.done; 
+      render(); 
+      socket.emit('toggleItem', id);
+    }
+  }
+
+  function removeItem(id) {
+    items = items.filter(function (i) { return i.id !== id; });
+    render();
+    socket.emit('removeItem', id);
+  }
+
+  /* ---------- Filter + search ---------- */
+  function getVisibleItems() {
+    var visible = items.slice();
+    if (filter === "done")   visible = visible.filter(function (i) { return i.done; });
+    if (filter === "unread") visible = visible.filter(function (i) { return !i.done; });
+
+    if (query) {
+      var q = query.toLowerCase();
+      visible = visible.filter(function (i) {
+        return i.title.toLowerCase().indexOf(q) !== -1 ||
+               i.url.toLowerCase().indexOf(q) !== -1 ||
+               getHost(i.url).toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    return visible;
+  }
+
+  function itemHTML(item) {
+    return (
+      '<li class="item ' + (item.done ? "done" : "") + '" data-id="' + item.id + '">' +
+        '<div class="favicon">' +
+          '<img src="' + faviconFor(item.url) + '" alt="" ' +
+               'onerror="this.replaceWith(document.createTextNode(\'🔗\'))" />' +
+        '</div>' +
+        '<div class="meta">' +
+          '<a class="title" href="' + escapeHTML(item.url) + '" target="_blank" rel="noopener noreferrer">' +
+            escapeHTML(item.title) +
+          '</a>' +
+          '<div class="domain">' + escapeHTML(getHost(item.url)) + ' · ' + timeAgo(item.addedAt) + '</div>' +
+        '</div>' +
+        '<div class="actions">' +
+          '<button class="icon-btn check" data-action="toggle" ' +
+                  'title="' + (item.done ? "Mark as unread" : "Mark as done") + '">' +
+            (item.done ? "↺" : "✓") +
+          '</button>' +
+          '<button class="icon-btn del" data-action="delete" title="Delete">✕</button>' +
+        '</div>' +
+      '</li>'
+    );
+  }
+
+  function renderFlat(visible) {
+    listEl.innerHTML = visible.map(itemHTML).join("");
+  }
+
+  function renderGrouped(visible) {
+    var groups = {};
+    visible.forEach(function (it) {
+      var key = getGroupKey(it.url);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(it);
+    });
+
+    var sorted = Object.keys(groups).sort(function (a, b) {
+      return groups[b].length - groups[a].length;
+    });
+
+    listEl.innerHTML = sorted.map(function (key) {
+      var groupItems = groups[key];
+      var doneN = groupItems.filter(function (i) { return i.done; }).length;
+      var latest = groupItems[0];
+
+      return (
+        '<li class="group" data-group="' + escapeHTML(key) + '">' +
+          '<div class="group-header" data-action="toggle-group">' +
+            '<div class="group-favicon">' +
+              '<img src="' + faviconFor(latest.url) + '" alt="" ' +
+                   'onerror="this.replaceWith(document.createTextNode(\'📁\'))" />' +
+            '</div>' +
+            '<div class="group-info">' +
+              '<div class="group-name">' +
+                escapeHTML(key) +
+                '<span class="group-count">' + groupItems.length + ' link' + (groupItems.length > 1 ? "s" : "") + '</span>' +
+              '</div>' +
+              '<div class="group-sub">' + doneN + ' done · ' + (groupItems.length - doneN) + ' unread</div>' +
+            '</div>' +
+            '<span class="chevron">▾</span>' +
+          '</div>' +
+          '<div class="group-body">' +
+            '<ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">' +
+              groupItems.map(itemHTML).join("") +
+            '</ul>' +
+          '</div>' +
+        '</li>'
+      );
+    }).join("");
+  }
+
+  function render() {
+    var doneCount   = items.filter(function (i) { return i.done; }).length;
+    var unreadCount = items.length - doneCount;
+    countAll.textContent    = items.length ? "(" + items.length + ")" : "";
+    countUnread.textContent = unreadCount ? "(" + unreadCount + ")" : "";
+    countDone.textContent   = doneCount ? "(" + doneCount + ")" : "";
+    totalEl.textContent     = items.length;
+
+    var groupSet = {};
+    items.forEach(function (i) { groupSet[getGroupKey(i.url)] = true; });
+    groupCountEl.textContent = Object.keys(groupSet).length;
+
+    var visible = getVisibleItems();
+
+    if (!visible.length) {
+      listEl.innerHTML =
+        '<li class="empty">' +
+          '<div class="big">' + (items.length ? "🔍" : "📌") + '</div>' +
+          '<p>' + (items.length
+              ? "No links match your filter or search."
+              : "Nothing saved yet. Paste a link above to get started!") + '</p>' +
+        '</li>';
+      return;
+    }
+
+    if (view === "grouped") renderGrouped(visible);
+    else                    renderFlat(visible);
+  }
+
+  function updateLivePreview() {
+    var raw = urlInput.value.trim();
+    if (!raw) {
+      livePreview.classList.remove("show");
+      return;
+    }
+
+    var url = normalizeUrl(raw);
+    var host = "";
+    try { host = new URL(url).hostname.replace(/^www\./, ""); }
+    catch (e) { livePreview.classList.remove("show"); return; }
+
+    if (!host || host.indexOf(".") === -1) {
+      livePreview.classList.remove("show");
+      return;
+    }
+
+    livePreview.classList.add("show");
+    pvTitle.textContent  = titleInput.value.trim() || host;
+    pvDomain.textContent = host;
+
+    pvFavicon.innerHTML = '<img src="' + faviconFor(url) + '" alt="" ' +
+      'onerror="this.replaceWith(document.createTextNode(\'🔗\'))" />';
+
+    var key = getGroupKey(url);
+    var existing = items.filter(function (i) { return getGroupKey(i.url) === key; }).length;
+    if (existing > 0) {
+      pvGroupHint.style.display = "flex";
+      pvGroupHint.innerHTML = "⧉ Will join group <strong>" + escapeHTML(key) + "</strong> (" + (existing + 1) + " total)";
+    } else {
+      pvGroupHint.style.display = "none";
+    }
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var url = urlInput.value.trim();
+    if (!url) { urlInput.focus(); return; }
+    addItem(url, titleInput.value);
+    form.reset();
+    livePreview.classList.remove("show");
+    urlInput.focus();
+  });
+
+  urlInput.addEventListener("input", updateLivePreview);
+  titleInput.addEventListener("input", updateLivePreview);
+
+  listEl.addEventListener("click", function (e) {
+    var header = e.target.closest("[data-action='toggle-group']");
+    if (header) {
+      header.closest(".group").classList.toggle("collapsed");
+      return;
+    }
+    var btn = e.target.closest("[data-action='toggle'], [data-action='delete']");
+    if (!btn) return;
+    var id = btn.closest(".item").dataset.id;
+    if (btn.dataset.action === "toggle") toggleDone(id);
+    if (btn.dataset.action === "delete") removeItem(id);
+  });
+
+  filtersEl.addEventListener("click", function (e) {
+    var btn = e.target.closest(".filter-btn");
+    if (!btn) return;
+    filter = btn.dataset.filter;
+    Array.prototype.forEach.call(filtersEl.querySelectorAll(".filter-btn"), function (b) {
+      b.classList.toggle("active", b === btn);
+    });
+    render();
+  });
+
+  viewToggle.addEventListener("click", function (e) {
+    var btn = e.target.closest(".view-btn");
+    if (!btn) return;
+    view = btn.dataset.view;
+    localStorage.setItem(VIEW_KEY, view);
+    Array.prototype.forEach.call(viewToggle.querySelectorAll(".view-btn"), function (b) {
+      b.classList.toggle("active", b === btn);
+    });
+    render();
+  });
+
+  searchEl.addEventListener("input", function (e) {
+    query = e.target.value.trim();
+    render();
+  });
+
+  window.addEventListener("storage", function (e) {
+    if (e.key === VIEW_KEY) {
+      view = e.newValue || "flat";
+      Array.prototype.forEach.call(viewToggle.querySelectorAll(".view-btn"), function (b) {
+        b.classList.toggle("active", b.dataset.view === view);
+      });
+      render();
+    }
+  });
+
+  Array.prototype.forEach.call(viewToggle.querySelectorAll(".view-btn"), function (b) {
+    b.classList.toggle("active", b.dataset.view === view);
+  });
+  render();
+})();
+</script>
+</body>
+</html>
