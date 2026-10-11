@@ -1,26 +1,25 @@
 # Watch Later (Learning Hub)
 
-A sleek, real-time bookmarking and learning library with **hierarchical groups & subgroups**, **drag-and-drop organization**, and permanent cloud sync via **Supabase**.
+A sleek, real-time bookmarking and learning library with **hierarchical groups & subgroups**, **group-into-group drag-and-drop nesting**, **custom group colors**, and permanent cloud sync via **Supabase**.
 
 ## 🌟 Key Features
 
-- **Hierarchical Groups & Subgroups**: Organize your saved links into custom categories (e.g. *Frontend > React*, *Backend > Node*, *Design > Framer*).
-- **Drag & Drop Organization**: Grab any link by its handle (`⋮⋮`) and drop it into another group or subgroup to move it instantly.
-- **Custom Groups (Not Domain-Locked)**: Group completely different links together (YouTube, GitHub, Medium, Documentation) under the same topic.
-- **Quick Actions & Move Modal**:
-  - Add links directly to any group or subgroup with `+ Add link here`.
-  - Move links seamlessly on mobile or desktop using the `🏷️ Move` button.
+- **Drag Group into Another Group**: Drag any Group header onto another Group to automatically nest it as a Subgroup!
+- **Promote Subgroups to Top-Level**: Drag a Subgroup into the promotion zone or click `⇪ Make Group` to convert it into an independent top-level group.
+- **Custom Group Colors**: Customize each group with vibrant preset colors (Blue, Purple, Emerald, Rose, Amber, Cyan, Pink) or any custom hex color.
+- **Edit Groups Anytime**: Click `✏️ Edit` on any group to rename it, change its color, or delete it with link reassignment.
+- **Drag & Drop Links**: Drag any link card by its handle (`⋮⋮`) and drop it into any group or subgroup.
+- **Custom Groups (Not Domain-Locked)**: Group completely different links together (YouTube, GitHub, Medium, Twitter, Docs) under the same topic.
 - **Permanent Cloud Persistence**: Stored in your Supabase PostgreSQL database so your links never disappear when the site sleeps.
 - **Multi-Device Realtime Sync**: Instantly syncs across all open browsers and devices when links are added, moved, or checked off.
-- **Live Preview & Favicons**: Automatic domain parsing and favicon fetching as you type links.
-- **Offline / Local Fallback**: Saves locally in browser storage so the app is always fast and responsive.
+- **Quick Move Modal**: On mobile or click, move any link between groups and subgroups with one tap using `🏷️`.
 
 ---
 
 ## ⚡ Supabase Setup
 
 ### 1. Database Schema
-If you are setting up the database, run this in your [Supabase SQL Editor](https://supabase.com/dashboard):
+Run this in your [Supabase SQL Editor](https://supabase.com/dashboard) to enable custom groups, subgroups, and colors:
 
 ```sql
 create table if not exists public.items (
@@ -31,11 +30,13 @@ create table if not exists public.items (
   added_at bigint not null,
   group_name text default 'General',
   subgroup_name text default '',
+  group_color text default '#6c8cff',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 alter table public.items add column if not exists group_name text default 'General';
 alter table public.items add column if not exists subgroup_name text default '';
+alter table public.items add column if not exists group_color text default '#6c8cff';
 
 alter table public.items enable row level security;
 

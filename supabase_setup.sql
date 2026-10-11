@@ -3,7 +3,7 @@
 -- Run this in your Supabase Dashboard -> SQL Editor -> Run
 -- ====================================================================
 
--- 1. Create the items table with hierarchy (group_name and subgroup_name)
+-- 1. Create the items table with hierarchy and group colors
 create table if not exists public.items (
   id text primary key,
   url text not null,
@@ -12,12 +12,14 @@ create table if not exists public.items (
   added_at bigint not null,
   group_name text default 'General',
   subgroup_name text default '',
+  group_color text default '#6c8cff',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Ensure group_name and subgroup_name columns exist
+-- Ensure all columns exist
 alter table public.items add column if not exists group_name text default 'General';
 alter table public.items add column if not exists subgroup_name text default '';
+alter table public.items add column if not exists group_color text default '#6c8cff';
 
 -- 2. Enable Row Level Security (RLS)
 alter table public.items enable row level security;

@@ -40,7 +40,7 @@
     justify-content: center;
   }
 
-  .app { width: 100%; max-width: 860px; }
+  .app { width: 100%; max-width: 880px; }
 
   /* ---------- Header ---------- */
   header { margin-bottom: 22px; }
@@ -212,7 +212,6 @@
     padding: 8px 12px;
   }
   .input-row:focus-within { border-color: rgba(108, 140, 255, 0.6); }
-
   .input-row.full { grid-column: span 2; }
 
   .input-icon { color: var(--muted); font-size: 0.95rem; flex-shrink: 0; }
@@ -239,6 +238,29 @@
     padding: 8px;
   }
 
+  /* Color selection in form */
+  .new-group-color-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+  }
+  .color-dot-picker {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .color-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform .15s, border-color .15s;
+  }
+  .color-dot:hover { transform: scale(1.18); }
+  .color-dot.selected { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 8px rgba(255,255,255,0.4); }
+
   .form-actions-row {
     display: flex;
     align-items: center;
@@ -261,20 +283,21 @@
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 3px 9px;
+    padding: 3px 10px;
     border-radius: 999px;
     cursor: pointer;
     font-size: 0.76rem;
     transition: all .15s;
     user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
   .quick-pill:hover {
-    background: rgba(108, 140, 255, 0.15);
     border-color: var(--accent);
     color: #fff;
   }
   .quick-pill.active {
-    background: linear-gradient(135deg, rgba(108,140,255,.3), rgba(160,108,255,.2));
     border-color: var(--accent);
     color: #fff;
     font-weight: 600;
@@ -458,6 +481,26 @@
     gap: 6px;
   }
 
+  /* Root Promote Dropzone */
+  .root-promote-zone {
+    border: 2px dashed rgba(108, 140, 255, 0.4);
+    background: rgba(108, 140, 255, 0.05);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: none;
+    transition: all .2s;
+  }
+  .root-promote-zone.active { display: block; }
+  .root-promote-zone.drag-over {
+    background: rgba(108, 140, 255, 0.18);
+    border-color: #fff;
+    transform: scale(1.01);
+  }
+
   /* ---------- List & Items ---------- */
   .list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
 
@@ -477,9 +520,8 @@
   .item.done { opacity: .55; }
   .item.done .title { text-decoration: line-through; }
 
-  /* Drag & Drop Classes */
   .item.dragging {
-    opacity: 0.4;
+    opacity: 0.35;
     border: 1px dashed var(--accent);
     transform: scale(0.98);
   }
@@ -538,17 +580,13 @@
     gap: 4px;
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--accent);
-    background: rgba(108, 140, 255, 0.1);
-    border: 1px solid rgba(108, 140, 255, 0.25);
     padding: 2px 7px;
     border-radius: 6px;
     cursor: pointer;
     transition: all .15s;
   }
   .hierarchy-badge:hover {
-    background: rgba(108, 140, 255, 0.2);
-    border-color: var(--accent);
+    filter: brightness(1.2);
   }
 
   .domain {
@@ -589,11 +627,16 @@
     transition: border-color .2s, box-shadow .2s;
   }
 
-  /* Droppable highlight on group */
+  .group.group-dragging {
+    opacity: 0.4;
+    border: 2px dashed var(--accent);
+    transform: scale(0.98);
+  }
+
   .group.drag-over {
-    border-color: var(--accent);
-    box-shadow: 0 0 20px var(--accent-glow);
-    background: rgba(108, 140, 255, 0.08);
+    border-color: #fff !important;
+    box-shadow: 0 0 25px rgba(255,255,255,0.25) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
   }
 
   .group-header {
@@ -608,13 +651,24 @@
   }
   .group-header:hover { background: var(--card-hover); }
 
+  .group-drag-handle {
+    color: #4b546a;
+    font-size: 1.1rem;
+    cursor: grab;
+    cursor: -webkit-grab;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color .15s;
+    flex-shrink: 0;
+  }
+  .group-drag-handle:hover { color: #fff; }
+
   .group-icon-wrap {
     width: 32px; height: 32px; flex-shrink: 0;
     border-radius: 9px;
-    background: linear-gradient(135deg, rgba(108,140,255,.2), rgba(160,108,255,.15));
-    border: 1px solid rgba(108,140,255,.3);
     display: grid; place-items: center;
     font-size: 15px;
+    border: 1px solid transparent;
   }
 
   .group-info { flex: 1; min-width: 0; }
@@ -632,9 +686,6 @@
   .group-count {
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--accent);
-    background: rgba(108,140,255,.14);
-    border: 1px solid rgba(108,140,255,.3);
     padding: 2px 8px;
     border-radius: 999px;
   }
@@ -666,8 +717,8 @@
     gap: 4px;
   }
   .group-action-btn:hover {
-    background: rgba(108, 140, 255, 0.15);
-    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #fff;
     color: #fff;
   }
 
@@ -696,7 +747,6 @@
     padding-bottom: 0;
   }
 
-  /* Drop zone within group root */
   .drop-zone {
     border: 1px dashed rgba(108, 140, 255, 0.3);
     background: rgba(108, 140, 255, 0.03);
@@ -721,11 +771,11 @@
     border-left: 3px solid var(--accent-2);
     border-radius: 11px;
     overflow: hidden;
-    margin-left: 12px;
+    margin-left: 14px;
     transition: border-color .2s, box-shadow .2s;
   }
   .subgroup.drag-over {
-    border-color: var(--accent-2);
+    border-color: #fff;
     box-shadow: 0 0 16px rgba(160, 108, 255, 0.3);
     background: rgba(160, 108, 255, 0.1);
   }
@@ -741,6 +791,18 @@
     transition: background .2s;
   }
   .subgroup-header:hover { background: rgba(35, 40, 51, 0.7); }
+
+  .subgroup-drag-handle {
+    color: #4b546a;
+    font-size: 1rem;
+    cursor: grab;
+    cursor: -webkit-grab;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color .15s;
+    flex-shrink: 0;
+  }
+  .subgroup-drag-handle:hover { color: #fff; }
 
   .subgroup-icon {
     font-size: 14px;
@@ -790,7 +852,6 @@
     padding-bottom: 0;
   }
 
-  /* Subgroup items inside */
   .subgroup-body .item {
     background: var(--card);
     padding: 10px 12px;
@@ -817,7 +878,7 @@
     margin-top: 32px;
   }
 
-  /* ---------- Modals (Settings & Move Item) ---------- */
+  /* ---------- Modals ---------- */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -948,6 +1009,38 @@
   }
   .field-input:focus { border-color: var(--accent); }
 
+  /* Palette grid inside Edit Group Modal */
+  .color-palette-grid {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .color-palette-item {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform .15s, border-color .15s;
+  }
+  .color-palette-item:hover { transform: scale(1.18); }
+  .color-palette-item.selected {
+    border-color: #fff;
+    transform: scale(1.15);
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  }
+  .custom-color-picker-input {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+  }
+
   .modal-status {
     padding: 10px 14px;
     border-radius: 9px;
@@ -989,16 +1082,18 @@
     transition: filter .2s;
   }
   .save-modal-btn:hover { filter: brightness(1.12); }
-  .disconnect-btn {
+  .danger-btn {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 95, 109, 0.4);
     border-radius: 9px;
     color: var(--danger);
     font-size: 0.82rem;
     font-family: inherit;
     padding: 10px 14px;
     cursor: pointer;
+    transition: all .2s;
   }
+  .danger-btn:hover { background: rgba(255, 95, 109, 0.12); border-color: var(--danger); }
 
   /* ---------- Toast Notification ---------- */
   .toast {
@@ -1028,7 +1123,6 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ---------- Mobile ---------- */
   @media (max-width: 600px) {
     .inputs-grid { grid-template-columns: 1fr; }
     .input-row.full { grid-column: span 1; }
@@ -1050,7 +1144,7 @@
         </button>
       </div>
     </div>
-    <p class="subtitle">Drag & drop links into custom groups and nested subgroups — saved permanently in Supabase.</p>
+    <p class="subtitle">Drag & drop links and groups into hierarchies with custom colors — saved in Supabase.</p>
     <div class="status-row">
       <span class="live-pill pending" id="connStatus" title="Click to configure cloud sync">
         <span class="beacon"></span> <span id="connText">Checking Supabase...</span>
@@ -1058,7 +1152,7 @@
     </div>
   </header>
 
-  <!-- Setup banner shown when credentials aren't configured yet -->
+  <!-- Setup banner -->
   <div class="setup-banner hidden" id="setupBanner">
     <div class="banner-content">
       <div class="banner-icon">⚡</div>
@@ -1070,7 +1164,7 @@
     <button class="banner-btn" id="bannerSetupBtn">Connect Supabase (2 mins)</button>
   </div>
 
-  <!-- Add Link Form with Group & Subgroup hierarchy -->
+  <!-- Add Link Form with Group & Subgroup hierarchy & Color options -->
   <form class="add-form" id="addForm" autocomplete="off" novalidate>
     <div class="inputs-grid">
       <!-- URL Input -->
@@ -1104,6 +1198,12 @@
         </select>
         <input type="text" id="newSubgroupInput" placeholder="New subgroup name..." style="display:none;" />
       </div>
+    </div>
+
+    <!-- Color selector when creating new group -->
+    <div class="new-group-color-wrap" id="newGroupColorWrap" style="display:none;">
+      <span style="font-size:0.78rem;color:var(--muted);">Group Color:</span>
+      <div class="color-dot-picker" id="newGroupColorPicker"></div>
     </div>
 
     <!-- Quick Group Selection Pills -->
@@ -1154,7 +1254,12 @@
   </div>
 
   <div class="drag-tip" id="dragTip">
-    <span>💡 Tip:</span> Drag any link by its handle (<strong>⋮⋮</strong>) and drop it onto another group or subgroup to move it instantly!
+    <span>💡 Tip:</span> Drag any link (<strong>⋮⋮</strong>) or <strong>drag an entire group header</strong> into another group to nest it as a subgroup!
+  </div>
+
+  <!-- Root Dropzone to promote a subgroup back to top-level group -->
+  <div class="root-promote-zone" id="rootPromoteZone" data-drop-target="root-promote">
+    📥 Drop here to promote subgroup back to a top-level group!
   </div>
 
   <!-- The Link List (Hierarchical or Flat) -->
@@ -1163,7 +1268,30 @@
   <p class="footer-note">Hierarchical Cloud Sync · <span id="total">0</span> items · <span id="groupCount">0</span> groups</p>
 </div>
 
-<!-- Move Item Modal (Allows moving to group/subgroup on mobile or click) -->
+<!-- Edit Group Modal (Rename, change color, or delete group) -->
+<div class="modal-overlay" id="editGroupModal">
+  <div class="modal-card" style="max-width: 460px;">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit Group</div>
+      <button class="modal-close-btn" id="closeEditGroupModalBtn">✕</button>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="editGroupNameInput">Group Name</label>
+      <input type="text" class="field-input" id="editGroupNameInput" placeholder="Group name..." />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Group Color</label>
+      <div class="color-palette-grid" id="editGroupColorPalette"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="danger-btn" id="deleteGroupBtn">Delete Group</button>
+      <div style="flex:1;"></div>
+      <button class="save-modal-btn" id="saveEditGroupBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Move Link Modal -->
 <div class="modal-overlay" id="moveModal">
   <div class="modal-card" style="max-width: 440px;">
     <div class="modal-header">
@@ -1203,7 +1331,7 @@
     <div class="modal-section">
       <div class="section-label">1. Database Table & Hierarchy Setup</div>
       <p class="section-desc">
-        Run this in your <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">Supabase SQL Editor ↗</a> to support custom groups & subgroups:
+        Run this in your <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">Supabase SQL Editor ↗</a>:
       </p>
       <div class="sql-box">
         <button class="copy-sql-btn" id="copySqlBtn">📋 Copy SQL</button>
@@ -1215,11 +1343,13 @@
   added_at bigint not null,
   group_name text default 'General',
   subgroup_name text default '',
+  group_color text default '#6c8cff',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 alter table public.items add column if not exists group_name text default 'General';
 alter table public.items add column if not exists subgroup_name text default '';
+alter table public.items add column if not exists group_color text default '#6c8cff';
 
 alter table public.items enable row level security;
 
@@ -1241,15 +1371,10 @@ end $$;</pre>
     <!-- Step 2: Credentials -->
     <div class="modal-section">
       <div class="section-label">2. Supabase API Credentials</div>
-      <p class="section-desc">
-        Find these in your Supabase Dashboard: <strong>Project Settings → API</strong>.
-      </p>
-
       <div class="field-group">
         <label class="field-label" for="cfgUrl">Project URL</label>
         <input type="text" class="field-input" id="cfgUrl" placeholder="https://your-project-id.supabase.co" />
       </div>
-
       <div class="field-group">
         <label class="field-label" for="cfgKey">Anon Public Key</label>
         <input type="text" class="field-input" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." />
@@ -1259,7 +1384,7 @@ end $$;</pre>
     <div class="modal-status" id="modalStatus"></div>
 
     <div class="modal-footer">
-      <button class="disconnect-btn" id="disconnectBtn" style="display:none;">Disconnect</button>
+      <button class="danger-btn" id="disconnectBtn" style="display:none;">Disconnect</button>
       <div style="flex:1;"></div>
       <button class="save-modal-btn" id="saveSettingsBtn">Connect & Save</button>
     </div>
@@ -1279,10 +1404,26 @@ end $$;</pre>
 
   var VIEW_KEY = "watch-later-view-mode";
   var LOCAL_CACHE_KEY = "watch-later-items-cache";
+  var GROUP_COLORS_KEY = "watch-later-group-colors";
   var SB_URL_KEY = "watch-later-sb-url";
   var SB_KEY_KEY = "watch-later-sb-key";
 
+  // Preset palette
+  var PALETTE = [
+    "#6c8cff", // Electric Blue (default)
+    "#a06cff", // Purple
+    "#34d399", // Emerald
+    "#f43f5e", // Rose
+    "#fb923c", // Orange
+    "#fbbf24", // Amber
+    "#22d3ee", // Cyan
+    "#ec4899", // Pink
+    "#a855f7", // Violet
+    "#8b93a7"  // Silver Slate
+  ];
+
   var items       = [];
+  var groupColors = {};
   var filter      = "all";
   var groupFilter = "all";
   var query       = "";
@@ -1292,20 +1433,30 @@ end $$;</pre>
 
   var sbClient    = null;
   var sbChannel   = null;
-  var hasGroupCols = true; // whether Supabase has group_name & subgroup_name columns
+  var hasGroupCols = true;
+  var activeNewGroupColor = PALETTE[0];
 
-  // Form elements
+  // Load group colors from storage
+  try {
+    groupColors = JSON.parse(localStorage.getItem(GROUP_COLORS_KEY) || "{}");
+  } catch (e) {
+    groupColors = {};
+  }
+  if (!groupColors["General"]) groupColors["General"] = "#6c8cff";
+
+  // Elements
   var form             = document.getElementById("addForm");
   var urlInput         = document.getElementById("urlInput");
   var titleInput       = document.getElementById("titleInput");
   var groupSelect      = document.getElementById("groupSelect");
   var newGroupInput    = document.getElementById("newGroupInput");
+  var newGroupColorWrap= document.getElementById("newGroupColorWrap");
+  var newGroupColorPicker = document.getElementById("newGroupColorPicker");
   var subgroupSelect   = document.getElementById("subgroupSelect");
   var newSubgroupInput = document.getElementById("newSubgroupInput");
   var quickPillsEl     = document.getElementById("quickPills");
   var addBtn           = document.getElementById("addBtn");
 
-  // List & Toolbar elements
   var listEl           = document.getElementById("list");
   var filtersEl        = document.getElementById("filters");
   var groupFilterEl    = document.getElementById("groupFilter");
@@ -1316,32 +1467,29 @@ end $$;</pre>
   var countDone        = document.getElementById("countDone");
   var totalEl          = document.getElementById("total");
   var groupCountEl     = document.getElementById("groupCount");
+  var rootPromoteZone  = document.getElementById("rootPromoteZone");
 
-  // Preview elements
   var livePreview      = document.getElementById("livePreview");
   var pvFavicon        = document.getElementById("pvFavicon");
   var pvTitle          = document.getElementById("pvTitle");
   var pvDomain         = document.getElementById("pvDomain");
   var pvHierarchyBadge = document.getElementById("pvHierarchyBadge");
 
-  // Status & Banner
   var connStatus       = document.getElementById("connStatus");
   var connText         = document.getElementById("connText");
   var setupBanner      = document.getElementById("setupBanner");
   var bannerSetupBtn   = document.getElementById("bannerSetupBtn");
   var toastEl          = document.getElementById("toast");
 
-  // Settings Modal elements
-  var settingsModal    = document.getElementById("settingsModal");
-  var openSettingsBtn  = document.getElementById("openSettingsBtn");
-  var closeSettingsBtn = document.getElementById("closeSettingsBtn");
-  var copySqlBtn       = document.getElementById("copySqlBtn");
-  var sqlCode          = document.getElementById("sqlCode");
-  var cfgUrl           = document.getElementById("cfgUrl");
-  var cfgKey           = document.getElementById("cfgKey");
-  var modalStatus      = document.getElementById("modalStatus");
-  var saveSettingsBtn  = document.getElementById("saveSettingsBtn");
-  var disconnectBtn    = document.getElementById("disconnectBtn");
+  // Edit Group Modal elements
+  var editGroupModal   = document.getElementById("editGroupModal");
+  var closeEditGroupModalBtn = document.getElementById("closeEditGroupModalBtn");
+  var editGroupNameInput = document.getElementById("editGroupNameInput");
+  var editGroupColorPalette = document.getElementById("editGroupColorPalette");
+  var saveEditGroupBtn = document.getElementById("saveEditGroupBtn");
+  var deleteGroupBtn   = document.getElementById("deleteGroupBtn");
+  var groupBeingEdited = null;
+  var editGroupChosenColor = "#6c8cff";
 
   // Move Modal elements
   var moveModal        = document.getElementById("moveModal");
@@ -1355,12 +1503,24 @@ end $$;</pre>
   var moveNewSubgroupInput = document.getElementById("moveNewSubgroupInput");
   var itemToMove       = null;
 
+  // Settings Modal elements
+  var settingsModal    = document.getElementById("settingsModal");
+  var openSettingsBtn  = document.getElementById("openSettingsBtn");
+  var closeSettingsBtn = document.getElementById("closeSettingsBtn");
+  var copySqlBtn       = document.getElementById("copySqlBtn");
+  var sqlCode          = document.getElementById("sqlCode");
+  var cfgUrl           = document.getElementById("cfgUrl");
+  var cfgKey           = document.getElementById("cfgKey");
+  var modalStatus      = document.getElementById("modalStatus");
+  var saveSettingsBtn  = document.getElementById("saveSettingsBtn");
+  var disconnectBtn    = document.getElementById("disconnectBtn");
+
   /* ---------- Helpers ---------- */
   function showToast(msg) {
     if (!toastEl) return;
     toastEl.textContent = msg;
     toastEl.classList.add("show");
-    setTimeout(function() { toastEl.classList.remove("show"); }, 3000);
+    setTimeout(function() { toastEl.classList.remove("show"); }, 3200);
   }
 
   function setConnState(state, text) {
@@ -1407,8 +1567,10 @@ end $$;</pre>
   }
 
   function saveLocalCache() {
-    try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(items)); }
-    catch (e) {}
+    try {
+      localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(items));
+      localStorage.setItem(GROUP_COLORS_KEY, JSON.stringify(groupColors));
+    } catch (e) {}
   }
 
   function loadLocalCache() {
@@ -1426,7 +1588,11 @@ end $$;</pre>
     return { url: url, key: key };
   }
 
-  /* ---------- Groups & Hierarchy Discovery ---------- */
+  function getGroupColor(grp) {
+    return groupColors[grp] || "#6c8cff";
+  }
+
+  /* ---------- Hierarchy & Dropdowns ---------- */
   function getExistingHierarchy() {
     var hierarchy = {};
     items.forEach(function(item) {
@@ -1443,7 +1609,6 @@ end $$;</pre>
     var hierarchy = getExistingHierarchy();
     var groups = Object.keys(hierarchy).sort();
 
-    // 1. Add Form Group Select
     var currentSelectedGroup = groupSelect.value;
     groupSelect.innerHTML = groups.map(function(g) {
       return '<option value="' + escapeHTML(g) + '">' + escapeHTML(g) + '</option>';
@@ -1466,7 +1631,7 @@ end $$;</pre>
     var subgroups = selectedGroup && hierarchy[selectedGroup] ? Array.from(hierarchy[selectedGroup]).sort() : [];
 
     var currentSubgroup = subgroupSelect.value;
-    subgroupSelect.innerHTML = '<option value="">(None - Root of Group)</option>' +
+    subgroupSelect.innerHTML = '<option value="">(None - Top of Group)</option>' +
       subgroups.map(function(sg) {
         return '<option value="' + escapeHTML(sg) + '">' + escapeHTML(sg) + '</option>';
       }).join("") + '<option value="__NEW_SUBGROUP__">+ Create New Subgroup...</option>';
@@ -1485,7 +1650,13 @@ end $$;</pre>
 
     quickPillsEl.innerHTML = '<span>Quick groups:</span>' +
       groups.map(function(g) {
-        return '<span class="quick-pill ' + (g === activeG ? 'active' : '') + '" data-group="' + escapeHTML(g) + '">' + escapeHTML(g) + '</span>';
+        var col = getGroupColor(g);
+        var isActive = (g === activeG);
+        return '<span class="quick-pill ' + (isActive ? 'active' : '') + '" data-group="' + escapeHTML(g) + '" style="' +
+          (isActive ? 'background:' + col + '2b; border-color:' + col + '; color:#fff;' : 'border-color:' + col + '40;') + '">' +
+          '<span style="width:8px;height:8px;border-radius:50%;background:' + col + ';display:inline-block;"></span>' +
+          escapeHTML(g) +
+        '</span>';
       }).join("");
   }
 
@@ -1521,6 +1692,20 @@ end $$;</pre>
     return subgroupSelect.value || "";
   }
 
+  function renderNewGroupColorPicker() {
+    newGroupColorPicker.innerHTML = PALETTE.map(function(c) {
+      return '<span class="color-dot ' + (c === activeNewGroupColor ? 'selected' : '') + '" data-color="' + c + '" style="background:' + c + ';"></span>';
+    }).join("");
+  }
+
+  newGroupColorPicker.addEventListener("click", function(e) {
+    var dot = e.target.closest(".color-dot");
+    if (!dot) return;
+    activeNewGroupColor = dot.dataset.color;
+    renderNewGroupColorPicker();
+    updateLivePreview();
+  });
+
   /* ---------- Supabase Data Sync ---------- */
   async function initSupabase() {
     var creds = getCredentials();
@@ -1552,20 +1737,21 @@ end $$;</pre>
       if (res.error) throw res.error;
 
       var cloudItems = (res.data || []).map(function (row) {
+        var g = (row.group_name || row.group || "General").trim();
+        if (row.group_color) groupColors[g] = row.group_color;
         return {
           id: row.id,
           url: row.url,
           title: row.title,
           done: Boolean(row.done),
           addedAt: Number(row.added_at) || Date.now(),
-          group: (row.group_name || row.group || "General").trim(),
+          group: g,
           subgroup: (row.subgroup_name || row.subgroup || "").trim()
         };
       });
 
       var localItems = loadLocalCache();
       if (localItems.length > 0 && cloudItems.length === 0) {
-        // First sync local to cloud
         try {
           var payload = localItems.map(function(it) {
             return {
@@ -1575,7 +1761,8 @@ end $$;</pre>
               done: it.done,
               added_at: it.addedAt,
               group_name: it.group || "General",
-              subgroup_name: it.subgroup || ""
+              subgroup_name: it.subgroup || "",
+              group_color: getGroupColor(it.group || "General")
             };
           });
           await sbClient.from('items').insert(payload);
@@ -1592,7 +1779,6 @@ end $$;</pre>
       render();
       setConnState("live", "Supabase Live");
 
-      // Subscribe to Realtime
       if (sbChannel) sbClient.removeChannel(sbChannel);
       sbChannel = sbClient
         .channel('public:items')
@@ -1614,13 +1800,15 @@ end $$;</pre>
 
   function handleRealtimeEvent(payload) {
     if (payload.eventType === 'INSERT' && payload.new) {
+      var g = (payload.new.group_name || payload.new.group || "General").trim();
+      if (payload.new.group_color) groupColors[g] = payload.new.group_color;
       var newItem = {
         id: payload.new.id,
         url: payload.new.url,
         title: payload.new.title,
         done: Boolean(payload.new.done),
         addedAt: Number(payload.new.added_at) || Date.now(),
-        group: (payload.new.group_name || payload.new.group || "General").trim(),
+        group: g,
         subgroup: (payload.new.subgroup_name || payload.new.subgroup || "").trim()
       };
       if (!items.find(function (i) { return i.id === newItem.id; })) {
@@ -1637,6 +1825,7 @@ end $$;</pre>
         it.url = payload.new.url;
         if (payload.new.group_name !== undefined) it.group = payload.new.group_name;
         if (payload.new.subgroup_name !== undefined) it.subgroup = payload.new.subgroup_name;
+        if (payload.new.group_color) groupColors[it.group] = payload.new.group_color;
         saveLocalCache();
         updateGroupDropdowns();
         render();
@@ -1649,13 +1838,17 @@ end $$;</pre>
     }
   }
 
-  /* ---------- Actions (Add, Toggle, Remove, Move) ---------- */
+  /* ---------- CRUD Actions ---------- */
   async function addItem(url, title, customGroup, customSubgroup) {
     var cleanUrl = normalizeUrl(url);
     if (!cleanUrl) return;
     var host = getHost(cleanUrl);
     var grp = (customGroup || getSelectedGroup() || "General").trim();
     var subgrp = (customSubgroup !== undefined ? customSubgroup : getSelectedSubgroup()).trim();
+
+    if (!groupColors[grp]) {
+      groupColors[grp] = activeNewGroupColor;
+    }
 
     var item = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
@@ -1684,16 +1877,16 @@ end $$;</pre>
         if (hasGroupCols) {
           row.group_name = item.group;
           row.subgroup_name = item.subgroup;
+          row.group_color = getGroupColor(item.group);
         }
         var res = await sbClient.from('items').insert([row]);
         if (res.error) {
-          // If columns don't exist yet, retry without them
-          if (res.error.message && (res.error.message.indexOf("group_name") !== -1 || res.error.message.indexOf("subgroup_name") !== -1)) {
+          if (res.error.message && (res.error.message.indexOf("group_name") !== -1 || res.error.message.indexOf("group_color") !== -1)) {
             hasGroupCols = false;
             delete row.group_name;
             delete row.subgroup_name;
+            delete row.group_color;
             await sbClient.from('items').insert([row]);
-            showToast("Saved! Open Cloud Settings to run the SQL for group columns.");
           } else {
             throw res.error;
           }
@@ -1734,8 +1927,6 @@ end $$;</pre>
     var it = items.find(function(i) { return i.id === id; });
     if (!it) return;
 
-    var oldGroup = it.group;
-    var oldSubgroup = it.subgroup;
     it.group = (targetGroup || "General").trim();
     it.subgroup = (targetSubgroup || "").trim();
 
@@ -1745,24 +1936,217 @@ end $$;</pre>
 
     if (sbClient && hasGroupCols) {
       try {
-        var res = await sbClient.from('items').update({
+        await sbClient.from('items').update({
           group_name: it.group,
-          subgroup_name: it.subgroup
+          subgroup_name: it.subgroup,
+          group_color: getGroupColor(it.group)
         }).eq('id', id);
-        if (res.error) throw res.error;
       } catch (e) {
-        console.error("Supabase update error:", e);
+        console.error(e);
       }
     }
 
-    var destName = it.group + (it.subgroup ? " > " + it.subgroup : "");
-    showToast('Moved "' + (it.title.length > 20 ? it.title.slice(0,18) + '…' : it.title) + '" to ' + destName);
+    var dest = it.group + (it.subgroup ? " > " + it.subgroup : "");
+    showToast('Moved to ' + dest);
   }
+
+  /* ---------- Drag Group into Another Group ---------- */
+  async function nestGroupIntoAnother(sourceGrp, targetGrp) {
+    if (!sourceGrp || !targetGrp || sourceGrp === targetGrp) return;
+
+    // Convert source group into a subgroup of targetGrp
+    var affected = 0;
+    items.forEach(function(it) {
+      if (it.group === sourceGrp) {
+        // If it already had a subgroup, prefix it e.g. "React - Components", else "React"
+        it.subgroup = it.subgroup ? sourceGrp + " - " + it.subgroup : sourceGrp;
+        it.group = targetGrp;
+        affected++;
+      }
+    });
+
+    saveLocalCache();
+    updateGroupDropdowns();
+    render();
+
+    if (sbClient && hasGroupCols) {
+      try {
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          if (it.group === targetGrp && (it.subgroup === sourceGrp || it.subgroup.indexOf(sourceGrp + " - ") === 0)) {
+            await sbClient.from('items').update({
+              group_name: it.group,
+              subgroup_name: it.subgroup,
+              group_color: getGroupColor(targetGrp)
+            }).eq('id', it.id);
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    showToast('✓ Nested group "' + sourceGrp + '" inside "' + targetGrp + '" (' + affected + ' links)');
+  }
+
+  /* ---------- Promote Subgroup to Top-Level Group ---------- */
+  async function promoteSubgroupToGroup(parentGrp, subgroupName) {
+    if (!parentGrp || !subgroupName) return;
+
+    var newTopGrpName = subgroupName;
+    if (!groupColors[newTopGrpName]) {
+      groupColors[newTopGrpName] = groupColors[parentGrp] || "#6c8cff";
+    }
+
+    var affected = 0;
+    items.forEach(function(it) {
+      if (it.group === parentGrp && it.subgroup === subgroupName) {
+        it.group = newTopGrpName;
+        it.subgroup = "";
+        affected++;
+      }
+    });
+
+    saveLocalCache();
+    updateGroupDropdowns();
+    render();
+
+    if (sbClient && hasGroupCols) {
+      try {
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          if (it.group === newTopGrpName && it.subgroup === "") {
+            await sbClient.from('items').update({
+              group_name: it.group,
+              subgroup_name: "",
+              group_color: getGroupColor(newTopGrpName)
+            }).eq('id', it.id);
+          }
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    showToast('✓ Promoted "' + subgroupName + '" to a top-level group!');
+  }
+
+  /* ---------- Edit Group (Rename, Color, Delete) ---------- */
+  function openEditGroupModal(grpName) {
+    groupBeingEdited = grpName;
+    editGroupNameInput.value = grpName;
+    editGroupChosenColor = getGroupColor(grpName);
+
+    // Render palette in modal
+    editGroupColorPalette.innerHTML = PALETTE.map(function(c) {
+      return '<span class="color-palette-item ' + (c === editGroupChosenColor ? 'selected' : '') + '" data-color="' + c + '" style="background:' + c + ';"></span>';
+    }).join("") +
+    '<input type="color" class="custom-color-picker-input" id="customColorPicker" value="' + editGroupChosenColor + '" title="Choose custom color" />';
+
+    editGroupModal.classList.add("open");
+  }
+
+  editGroupColorPalette.addEventListener("click", function(e) {
+    var item = e.target.closest(".color-palette-item");
+    if (!item) return;
+    editGroupChosenColor = item.dataset.color;
+    Array.prototype.forEach.call(editGroupColorPalette.querySelectorAll(".color-palette-item"), function(el) {
+      el.classList.toggle("selected", el === item);
+    });
+    var customInput = document.getElementById("customColorPicker");
+    if (customInput) customInput.value = editGroupChosenColor;
+  });
+
+  editGroupColorPalette.addEventListener("change", function(e) {
+    if (e.target.id === "customColorPicker") {
+      editGroupChosenColor = e.target.value;
+      Array.prototype.forEach.call(editGroupColorPalette.querySelectorAll(".color-palette-item"), function(el) {
+        el.classList.remove("selected");
+      });
+    }
+  });
+
+  saveEditGroupBtn.addEventListener("click", async function() {
+    if (!groupBeingEdited) return;
+    var newName = editGroupNameInput.value.trim() || groupBeingEdited;
+    var newColor = editGroupChosenColor;
+
+    // Update color
+    groupColors[newName] = newColor;
+    if (newName !== groupBeingEdited) {
+      delete groupColors[groupBeingEdited];
+      // Rename in all items
+      items.forEach(function(it) {
+        if (it.group === groupBeingEdited) it.group = newName;
+      });
+    }
+
+    saveLocalCache();
+    updateGroupDropdowns();
+    render();
+
+    // Supabase update
+    if (sbClient && hasGroupCols) {
+      try {
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          if (it.group === newName) {
+            await sbClient.from('items').update({
+              group_name: newName,
+              group_color: newColor
+            }).eq('id', it.id);
+          }
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    editGroupModal.classList.remove("open");
+    showToast('✓ Updated group "' + newName + '"');
+  });
+
+  deleteGroupBtn.addEventListener("click", async function() {
+    if (!groupBeingEdited) return;
+    if (groupBeingEdited === "General") {
+      alert("The General group cannot be deleted.");
+      return;
+    }
+
+    var choice = confirm('Delete group "' + groupBeingEdited + '"?\n\nClick OK to move all its links to "General", or Cancel to keep the group.');
+    if (!choice) return;
+
+    items.forEach(function(it) {
+      if (it.group === groupBeingEdited) {
+        it.group = "General";
+        it.subgroup = "";
+      }
+    });
+    delete groupColors[groupBeingEdited];
+
+    saveLocalCache();
+    updateGroupDropdowns();
+    render();
+
+    if (sbClient && hasGroupCols) {
+      try {
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].group === "General") {
+            await sbClient.from('items').update({
+              group_name: "General",
+              subgroup_name: "",
+              group_color: getGroupColor("General")
+            }).eq('id', items[i].id);
+          }
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    editGroupModal.classList.remove("open");
+    showToast('Deleted group "' + groupBeingEdited + '" (links moved to General)');
+  });
+
+  closeEditGroupModalBtn.addEventListener("click", function() { editGroupModal.classList.remove("open"); });
 
   /* ---------- Filtering & Search ---------- */
   function getVisibleItems() {
     var visible = items.slice();
-
     if (filter === "done")   visible = visible.filter(function (i) { return i.done; });
     if (filter === "unread") visible = visible.filter(function (i) { return !i.done; });
 
@@ -1784,29 +2168,29 @@ end $$;</pre>
 
   /* ---------- HTML Generators ---------- */
   function itemHTML(item) {
+    var col = getGroupColor(item.group || "General");
     var grpText = escapeHTML(item.group || "General");
     if (item.subgroup) grpText += " &rsaquo; " + escapeHTML(item.subgroup);
 
     return (
       '<li class="item ' + (item.done ? "done" : "") + '" data-id="' + item.id + '" draggable="true">' +
-        '<div class="drag-handle" title="Drag to move into another group or subgroup">&#8942;&#8942;</div>' +
+        '<div class="drag-handle" title="Drag link into another group or subgroup">&#8942;&#8942;</div>' +
         '<div class="favicon">' +
-          '<img src="' + faviconFor(item.url) + '" alt="" ' +
-               'onerror="this.replaceWith(document.createTextNode(\'🔗\'))" />' +
+          '<img src="' + faviconFor(item.url) + '" alt="" onerror="this.replaceWith(document.createTextNode(\'🔗\'))" />' +
         '</div>' +
         '<div class="meta">' +
           '<div class="title-row">' +
             '<a class="title" href="' + escapeHTML(item.url) + '" target="_blank" rel="noopener noreferrer" title="' + escapeHTML(item.title) + '">' +
               escapeHTML(item.title) +
             '</a>' +
-            '<span class="hierarchy-badge" data-action="open-move" data-id="' + item.id + '" title="Click to move group">' +
+            '<span class="hierarchy-badge" data-action="open-move" data-id="' + item.id + '" title="Click to move group" style="background:' + col + '18; border:1px solid ' + col + '3a; color:' + col + ';">' +
               '📁 ' + grpText +
             '</span>' +
           '</div>' +
           '<div class="domain">' + escapeHTML(getHost(item.url)) + ' · ' + timeAgo(item.addedAt) + '</div>' +
         '</div>' +
         '<div class="actions">' +
-          '<button class="icon-btn move" data-action="open-move" data-id="' + item.id + '" title="Move to group / subgroup">🏷️</button>' +
+          '<button class="icon-btn move" data-action="open-move" data-id="' + item.id + '" title="Move link">🏷️</button>' +
           '<button class="icon-btn check" data-action="toggle" title="' + (item.done ? "Mark as unread" : "Mark as done") + '">' +
             (item.done ? "↺" : "✓") +
           '</button>' +
@@ -1822,7 +2206,6 @@ end $$;</pre>
   }
 
   function renderGrouped(visible) {
-    // 1. Organize into Group -> Subgroup -> Items
     var groups = {};
     visible.forEach(function (it) {
       var g = (it.group || "General").trim();
@@ -1849,6 +2232,7 @@ end $$;</pre>
 
     listEl.innerHTML = groupNames.map(function(grp) {
       var grpData = groups[grp];
+      var grpColor = getGroupColor(grp);
       var sgNames = Object.keys(grpData.subgroups).sort();
       var totalInGroup = grpData.directItems.length + sgNames.reduce(function(acc, k) { return acc + grpData.subgroups[k].length; }, 0);
       var doneInGroup = grpData.directItems.filter(function(i){return i.done;}).length +
@@ -1862,14 +2246,16 @@ end $$;</pre>
         var isSgCollapsed = collapsedSubgroups[grp + "::" + sg];
         return (
           '<div class="subgroup ' + (isSgCollapsed ? 'collapsed' : '') + '" data-drop-target="subgroup" data-group="' + escapeHTML(grp) + '" data-subgroup="' + escapeHTML(sg) + '">' +
-            '<div class="subgroup-header" data-action="toggle-subgroup" data-group="' + escapeHTML(grp) + '" data-subgroup="' + escapeHTML(sg) + '">' +
+            '<div class="subgroup-header" data-action="toggle-subgroup" data-group="' + escapeHTML(grp) + '" data-subgroup="' + escapeHTML(sg) + '" draggable="true" data-drag-source="subgroup">' +
+              '<span class="subgroup-drag-handle" title="Drag subgroup">&#8942;&#8942;</span>' +
               '<span class="subgroup-icon">📂</span>' +
               '<span class="subgroup-name">' +
                 escapeHTML(sg) +
                 '<span class="subgroup-count">' + sgItems.length + ' link' + (sgItems.length > 1 ? "s" : "") + '</span>' +
               '</span>' +
               '<div class="group-actions">' +
-                '<button type="button" class="group-action-btn" data-action="quick-add-to" data-group="' + escapeHTML(grp) + '" data-subgroup="' + escapeHTML(sg) + '">+ Add link here</button>' +
+                '<button type="button" class="group-action-btn" data-action="promote-subgroup" data-group="' + escapeHTML(grp) + '" data-subgroup="' + escapeHTML(sg) + '" title="Convert this subgroup into its own top-level group">⇪ Make Group</button>' +
+                '<button type="button" class="group-action-btn" data-action="quick-add-to" data-group="' + escapeHTML(grp) + '" data-subgroup="' + escapeHTML(sg) + '">+ Link</button>' +
               '</div>' +
               '<span class="subgroup-chevron">▾</span>' +
             '</div>' +
@@ -1883,17 +2269,19 @@ end $$;</pre>
       }).join("");
 
       return (
-        '<li class="group ' + (isCollapsed ? 'collapsed' : '') + '" data-drop-target="group" data-group="' + escapeHTML(grp) + '">' +
-          '<div class="group-header" data-action="toggle-group" data-group="' + escapeHTML(grp) + '">' +
-            '<div class="group-icon-wrap">📁</div>' +
+        '<li class="group ' + (isCollapsed ? 'collapsed' : '') + '" data-drop-target="group" data-group="' + escapeHTML(grp) + '" style="border-left: 3px solid ' + grpColor + ';">' +
+          '<div class="group-header" data-action="toggle-group" data-group="' + escapeHTML(grp) + '" draggable="true" data-drag-source="group">' +
+            '<span class="group-drag-handle" title="Drag group onto another group to nest it as a subgroup">&#8942;&#8942;</span>' +
+            '<div class="group-icon-wrap" style="background:' + grpColor + '22; border-color:' + grpColor + '40; color:' + grpColor + ';">📁</div>' +
             '<div class="group-info">' +
               '<div class="group-title-row">' +
                 '<span class="group-name">' + escapeHTML(grp) + '</span>' +
-                '<span class="group-count">' + totalInGroup + ' link' + (totalInGroup > 1 ? "s" : "") + '</span>' +
+                '<span class="group-count" style="background:' + grpColor + '20; color:' + grpColor + '; border:1px solid ' + grpColor + '40;">' + totalInGroup + ' link' + (totalInGroup > 1 ? "s" : "") + '</span>' +
               '</div>' +
               '<div class="group-sub">' + doneInGroup + ' done · ' + (totalInGroup - doneInGroup) + ' unread</div>' +
             '</div>' +
             '<div class="group-actions">' +
+              '<button type="button" class="group-action-btn" data-action="open-edit-group" data-group="' + escapeHTML(grp) + '" title="Edit group name or color">✏️ Edit</button>' +
               '<button type="button" class="group-action-btn" data-action="quick-add-subgroup" data-group="' + escapeHTML(grp) + '">+ Subgroup</button>' +
               '<button type="button" class="group-action-btn" data-action="quick-add-to" data-group="' + escapeHTML(grp) + '" data-subgroup="">+ Link</button>' +
             '</div>' +
@@ -1944,25 +2332,63 @@ end $$;</pre>
     else renderFlat(visible);
   }
 
-  /* ---------- Drag & Drop Logic ---------- */
+  /* ---------- Unified Drag & Drop (Links & Groups) ---------- */
   function bindDragEvents() {
+    // 1. Link items dragging
     var draggableItems = listEl.querySelectorAll(".item");
     draggableItems.forEach(function(itemEl) {
       itemEl.addEventListener("dragstart", function(e) {
+        e.stopPropagation();
         itemEl.classList.add("dragging");
-        e.dataTransfer.setData("text/plain", itemEl.dataset.id);
+        e.dataTransfer.setData("drag-type", "link");
+        e.dataTransfer.setData("item-id", itemEl.dataset.id);
         e.dataTransfer.effectAllowed = "move";
       });
       itemEl.addEventListener("dragend", function() {
         itemEl.classList.remove("dragging");
-        document.querySelectorAll(".drag-over").forEach(function(el) {
-          el.classList.remove("drag-over");
-        });
+        cleanupDragStates();
       });
     });
 
-    // Drop targets (groups, subgroups, drop-zones)
-    var targets = listEl.querySelectorAll("[data-drop-target]");
+    // 2. Group Headers dragging (Nest group into another group)
+    var draggableGroupHeaders = listEl.querySelectorAll("[data-drag-source='group']");
+    draggableGroupHeaders.forEach(function(headerEl) {
+      headerEl.addEventListener("dragstart", function(e) {
+        var grpName = headerEl.dataset.group;
+        headerEl.closest(".group").classList.add("group-dragging");
+        e.dataTransfer.setData("drag-type", "group");
+        e.dataTransfer.setData("group-name", grpName);
+        e.dataTransfer.effectAllowed = "move";
+      });
+      headerEl.addEventListener("dragend", function() {
+        headerEl.closest(".group").classList.remove("group-dragging");
+        cleanupDragStates();
+      });
+    });
+
+    // 3. Subgroup Headers dragging (Drag subgroup to another group or promote)
+    var draggableSubgroupHeaders = listEl.querySelectorAll("[data-drag-source='subgroup']");
+    draggableSubgroupHeaders.forEach(function(headerEl) {
+      headerEl.addEventListener("dragstart", function(e) {
+        e.stopPropagation();
+        var parentGrp = headerEl.dataset.group;
+        var sgName = headerEl.dataset.subgroup;
+        headerEl.closest(".subgroup").style.opacity = "0.4";
+        e.dataTransfer.setData("drag-type", "subgroup");
+        e.dataTransfer.setData("source-group", parentGrp);
+        e.dataTransfer.setData("subgroup-name", sgName);
+        e.dataTransfer.effectAllowed = "move";
+        rootPromoteZone.classList.add("active");
+      });
+      headerEl.addEventListener("dragend", function() {
+        headerEl.closest(".subgroup").style.opacity = "1";
+        rootPromoteZone.classList.remove("active");
+        cleanupDragStates();
+      });
+    });
+
+    // 4. Drop Targets
+    var targets = document.querySelectorAll("[data-drop-target]");
     targets.forEach(function(targetEl) {
       targetEl.addEventListener("dragover", function(e) {
         e.preventDefault();
@@ -1970,7 +2396,7 @@ end $$;</pre>
         e.dataTransfer.dropEffect = "move";
         targetEl.classList.add("drag-over");
       });
-      targetEl.addEventListener("dragleave", function(e) {
+      targetEl.addEventListener("dragleave", function() {
         targetEl.classList.remove("drag-over");
       });
       targetEl.addEventListener("drop", function(e) {
@@ -1978,14 +2404,52 @@ end $$;</pre>
         e.stopPropagation();
         targetEl.classList.remove("drag-over");
 
-        var draggedId = e.dataTransfer.getData("text/plain");
-        if (!draggedId) return;
+        var dragType = e.dataTransfer.getData("drag-type");
 
-        var targetGroup = targetEl.dataset.group || "General";
-        var targetSubgroup = targetEl.dataset.subgroup || "";
-        moveItem(draggedId, targetGroup, targetSubgroup);
+        if (dragType === "link") {
+          var draggedId = e.dataTransfer.getData("item-id");
+          var targetGrp = targetEl.dataset.group || "General";
+          var targetSg = targetEl.dataset.subgroup || "";
+          if (draggedId) moveItem(draggedId, targetGrp, targetSg);
+
+        } else if (dragType === "group") {
+          var sourceGrp = e.dataTransfer.getData("group-name");
+          var targetGrp = targetEl.dataset.group;
+          if (sourceGrp && targetGrp && sourceGrp !== targetGrp) {
+            nestGroupIntoAnother(sourceGrp, targetGrp);
+          }
+
+        } else if (dragType === "subgroup") {
+          var sourceGrp = e.dataTransfer.getData("source-group");
+          var sgName = e.dataTransfer.getData("subgroup-name");
+          var targetType = targetEl.dataset.dropTarget;
+
+          if (targetType === "root-promote") {
+            promoteSubgroupToGroup(sourceGrp, sgName);
+          } else {
+            var targetGrp = targetEl.dataset.group;
+            if (targetGrp && sourceGrp !== targetGrp) {
+              // Move subgroup from sourceGrp to targetGrp
+              items.forEach(function(it) {
+                if (it.group === sourceGrp && it.subgroup === sgName) {
+                  it.group = targetGrp;
+                }
+              });
+              saveLocalCache();
+              updateGroupDropdowns();
+              render();
+              showToast('Moved subgroup "' + sgName + '" to "' + targetGrp + '"');
+            }
+          }
+        }
       });
     });
+  }
+
+  function cleanupDragStates() {
+    document.querySelectorAll(".drag-over").forEach(function(el) { el.classList.remove("drag-over"); });
+    document.querySelectorAll(".group-dragging").forEach(function(el) { el.classList.remove("group-dragging"); });
+    rootPromoteZone.classList.remove("active");
   }
 
   /* ---------- Move Modal Handling ---------- */
@@ -1994,7 +2458,6 @@ end $$;</pre>
     if (!itemToMove) return;
 
     moveItemDesc.innerHTML = 'Move "<strong>' + escapeHTML(itemToMove.title) + '</strong>" to:';
-
     var hierarchy = getExistingHierarchy();
     var groups = Object.keys(hierarchy).sort();
 
@@ -2047,7 +2510,6 @@ end $$;</pre>
     if (!itemToMove) return;
     var targetGroup = moveGroupSelect.value === "__NEW_GROUP__" ? moveNewGroupInput.value.trim() || "General" : moveGroupSelect.value;
     var targetSubgroup = moveSubgroupSelect.value === "__NEW_SUBGROUP__" ? moveNewSubgroupInput.value.trim() : moveSubgroupSelect.value;
-
     moveItem(itemToMove.id, targetGroup, targetSubgroup);
     moveModal.classList.remove("open");
   });
@@ -2080,15 +2542,22 @@ end $$;</pre>
 
     var g = getSelectedGroup();
     var sg = getSelectedSubgroup();
+    var col = getGroupColor(g);
     pvHierarchyBadge.textContent = '📁 ' + g + (sg ? ' › ' + sg : '');
+    pvHierarchyBadge.style.color = col;
+    pvHierarchyBadge.style.borderColor = col;
+    pvHierarchyBadge.style.background = col + "1a";
   }
 
   groupSelect.addEventListener("change", function() {
     if (groupSelect.value === "__NEW_GROUP__") {
       newGroupInput.style.display = "block";
+      newGroupColorWrap.style.display = "flex";
+      renderNewGroupColorPicker();
       newGroupInput.focus();
     } else {
       newGroupInput.style.display = "none";
+      newGroupColorWrap.style.display = "none";
     }
     updateSubgroupDropdown();
     updateLivePreview();
@@ -2116,6 +2585,7 @@ end $$;</pre>
     var grp = pill.dataset.group;
     groupSelect.value = grp;
     newGroupInput.style.display = "none";
+    newGroupColorWrap.style.display = "none";
     updateSubgroupDropdown();
     updateQuickPills();
     updateLivePreview();
@@ -2133,8 +2603,9 @@ end $$;</pre>
 
     form.reset();
     newGroupInput.style.display = "none";
+    newGroupColorWrap.style.display = "none";
     newSubgroupInput.style.display = "none";
-    groupSelect.value = grp; // Keep current group selected for rapid adding
+    groupSelect.value = grp;
     updateSubgroupDropdown();
     livePreview.classList.remove("show");
     urlInput.focus();
@@ -2143,9 +2614,25 @@ end $$;</pre>
   urlInput.addEventListener("input", updateLivePreview);
   titleInput.addEventListener("input", updateLivePreview);
 
-  /* ---------- List Clicks (Collapse, Actions, Move) ---------- */
+  /* ---------- List Interactions (Clicks & Actions) ---------- */
   listEl.addEventListener("click", function (e) {
-    // 1. Quick add to group/subgroup
+    // 1. Edit Group
+    var editGrpBtn = e.target.closest("[data-action='open-edit-group']");
+    if (editGrpBtn) {
+      e.stopPropagation();
+      openEditGroupModal(editGrpBtn.dataset.group);
+      return;
+    }
+
+    // 2. Promote Subgroup
+    var promoteBtn = e.target.closest("[data-action='promote-subgroup']");
+    if (promoteBtn) {
+      e.stopPropagation();
+      promoteSubgroupToGroup(promoteBtn.dataset.group, promoteBtn.dataset.subgroup);
+      return;
+    }
+
+    // 3. Quick add link to group/subgroup
     var quickBtn = e.target.closest("[data-action='quick-add-to']");
     if (quickBtn) {
       e.stopPropagation();
@@ -2163,7 +2650,7 @@ end $$;</pre>
       return;
     }
 
-    // 2. Quick add subgroup
+    // 4. Quick add subgroup
     var addSgBtn = e.target.closest("[data-action='quick-add-subgroup']");
     if (addSgBtn) {
       e.stopPropagation();
@@ -2182,7 +2669,7 @@ end $$;</pre>
       return;
     }
 
-    // 3. Move modal opener
+    // 5. Open move link modal
     var moveBtn = e.target.closest("[data-action='open-move']");
     if (moveBtn) {
       e.stopPropagation();
@@ -2190,7 +2677,7 @@ end $$;</pre>
       return;
     }
 
-    // 4. Toggle Group Collapse
+    // 6. Toggle Group Collapse
     var grpHeader = e.target.closest("[data-action='toggle-group']");
     if (grpHeader) {
       var grpName = grpHeader.dataset.group;
@@ -2200,7 +2687,7 @@ end $$;</pre>
       return;
     }
 
-    // 5. Toggle Subgroup Collapse
+    // 7. Toggle Subgroup Collapse
     var sgHeader = e.target.closest("[data-action='toggle-subgroup']");
     if (sgHeader) {
       var key = sgHeader.dataset.group + "::" + sgHeader.dataset.subgroup;
@@ -2210,7 +2697,7 @@ end $$;</pre>
       return;
     }
 
-    // 6. Item actions (Done toggle & Delete)
+    // 8. Item actions
     var btn = e.target.closest("[data-action='toggle'], [data-action='delete']");
     if (!btn) return;
     var id = btn.closest(".item").dataset.id;
@@ -2218,7 +2705,7 @@ end $$;</pre>
     if (btn.dataset.action === "delete") removeItem(id);
   });
 
-  /* ---------- Toolbar Filters & View Switching ---------- */
+  /* ---------- Toolbar Filters & Settings ---------- */
   filtersEl.addEventListener("click", function (e) {
     var btn = e.target.closest(".filter-btn");
     if (!btn) return;
@@ -2250,7 +2737,7 @@ end $$;</pre>
     render();
   });
 
-  // Settings Modal Controls
+  // Settings Modal
   openSettingsBtn.addEventListener("click", function() {
     var creds = getCredentials();
     cfgUrl.value = creds.url;
@@ -2318,7 +2805,7 @@ end $$;</pre>
     }
   });
 
-  // Initialize
+  // Start app
   initSupabase();
 
 })();
