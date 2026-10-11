@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Watch Later — Live & Grouped</title>
+<title>Watch Later — Live & Permanent with Supabase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0f1117;
@@ -40,6 +43,14 @@
   /* ---------- Header ---------- */
   header { margin-bottom: 22px; }
 
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
   h1 {
     font-size: clamp(1.6rem, 4vw, 2.2rem);
     font-weight: 700;
@@ -55,7 +66,41 @@
     box-shadow: 0 0 18px var(--accent);
   }
 
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .settings-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .settings-btn:hover {
+    background: var(--card-hover);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
   .subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 8px; }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
 
   .live-pill {
     display: inline-flex;
@@ -68,14 +113,24 @@
     color: var(--success);
     background: rgba(52, 211, 153, .1);
     border: 1px solid rgba(52, 211, 153, .25);
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 999px;
-    margin-top: 12px;
+    cursor: pointer;
+    transition: transform .15s, background .2s;
   }
+  .live-pill:hover {
+    transform: scale(1.03);
+  }
+
   .live-pill.disconnected {
     color: var(--danger);
     background: rgba(255, 95, 109, .1);
     border-color: rgba(255, 95, 109, .25);
+  }
+  .live-pill.pending {
+    color: var(--warn);
+    background: rgba(251, 191, 36, .1);
+    border-color: rgba(251, 191, 36, .25);
   }
   .live-pill .beacon {
     width: 7px; height: 7px; border-radius: 50%;
@@ -88,11 +143,63 @@
     animation: none;
     box-shadow: none;
   }
+  .live-pill.pending .beacon {
+    background: var(--warn);
+    animation: beacon 1.8s infinite;
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, .7);
+  }
   @keyframes beacon {
     0%   { box-shadow: 0 0 0 0 rgba(52,211,153,.7); }
     70%  { box-shadow: 0 0 0 9px rgba(52,211,153,0); }
     100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
   }
+
+  /* ---------- Setup Banner ---------- */
+  .setup-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(135deg, rgba(108,140,255,.12), rgba(160,108,255,.08));
+    border: 1px solid rgba(108,140,255,.3);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-top: 18px;
+    animation: fadeIn .3s ease;
+  }
+  .setup-banner.hidden { display: none; }
+  .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .banner-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+  .banner-content strong {
+    display: block;
+    font-size: 0.92rem;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .banner-content p {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .banner-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter .2s;
+  }
+  .banner-btn:hover { filter: brightness(1.15); }
 
   /* ---------- Add form ---------- */
   .add-form {
@@ -103,7 +210,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 12px;
-    margin: 22px 0 0;
+    margin: 20px 0 0;
     transition: border-color .2s;
   }
   .add-form:focus-within { border-color: var(--accent); }
@@ -126,7 +233,7 @@
 
   .add-btn {
     align-self: stretch;
-    padding: 0 22px;
+    padding: 0 24px;
     border: none;
     border-radius: 10px;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -139,7 +246,6 @@
   }
   .add-btn:hover { filter: brightness(1.12); }
   .add-btn:active { transform: scale(.97); }
-  .add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
   /* LIVE PREVIEW */
   .live-preview {
@@ -456,9 +562,257 @@
 
   .footer-note {
     text-align: center;
-    color: #4d5468;
-    font-size: 0.78rem;
-    margin-top: 30px;
+    color: #5d667e;
+    font-size: 0.8rem;
+    margin-top: 32px;
+  }
+
+  /* ---------- Modal (Supabase Settings) ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 18, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #171a23;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 26px 28px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+    transform: scale(0.95);
+    transition: transform .25s ease;
+  }
+  .modal-overlay.open .modal-card {
+    transform: scale(1);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    border-radius: 8px;
+    transition: background .2s, color .2s;
+  }
+  .modal-close-btn:hover {
+    background: #232833;
+    color: #fff;
+  }
+
+  .modal-section {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 12px;
+    padding-bottom: 0;
+  }
+
+  .section-label {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-desc {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    line-height: 1.45;
+  }
+  .section-desc a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .section-desc a:hover { text-decoration: underline; }
+
+  .sql-box {
+    background: #0f1117;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .sql-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.76rem;
+    color: #a5b4fc;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    max-height: 130px;
+    overflow-y: auto;
+  }
+  .copy-sql-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #232833;
+    border: 1px solid var(--border);
+    color: #e7eaf3;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .copy-sql-btn:hover { background: #323a4a; }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .field-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .field-input {
+    background: #0f1117;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 0.88rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .field-input:focus { border-color: var(--accent); }
+
+  .modal-status {
+    padding: 10px 14px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    margin-bottom: 16px;
+    display: none;
+    animation: fadeIn .2s ease;
+  }
+  .modal-status.success {
+    display: block;
+    background: rgba(52, 211, 153, 0.12);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    color: var(--success);
+  }
+  .modal-status.error {
+    display: block;
+    background: rgba(255, 95, 109, 0.12);
+    border: 1px solid rgba(255, 95, 109, 0.35);
+    color: var(--danger);
+  }
+  .modal-status.loading {
+    display: block;
+    background: rgba(108, 140, 255, 0.12);
+    border: 1px solid rgba(108, 140, 255, 0.35);
+    color: var(--accent);
+  }
+
+  .modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .save-modal-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none;
+    border-radius: 9px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.88rem;
+    font-family: inherit;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: filter .2s;
+  }
+  .save-modal-btn:hover { filter: brightness(1.12); }
+  .disconnect-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--danger);
+    font-size: 0.82rem;
+    font-family: inherit;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .disconnect-btn:hover { background: rgba(255, 95, 109, 0.1); }
+
+  /* ---------- Toast Notification ---------- */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1c2029;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 11px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1050;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .25s ease, transform .25s ease;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   /* ---------- Mobile ---------- */
@@ -467,6 +821,8 @@
     .add-btn { padding: 12px; }
     .toolbar { flex-direction: column; align-items: stretch; }
     .filters, .view-toggle { justify-content: center; }
+    .setup-banner { flex-direction: column; align-items: flex-start; }
+    .banner-btn { width: 100%; text-align: center; }
   }
 </style>
 </head>
@@ -474,10 +830,33 @@
 
 <div class="app">
   <header>
-    <h1><span class="dot"></span> Watch Later</h1>
-    <p class="subtitle">Save links live — automatically synced in real-time across all devices.</p>
-    <span class="live-pill" id="connStatus"><span class="beacon"></span> <span id="connText">Connecting...</span></span>
+    <div class="header-top">
+      <h1><span class="dot"></span> Watch Later</h1>
+      <div class="header-actions">
+        <button class="settings-btn" id="openSettingsBtn" title="Supabase Database Settings">
+          ☁️ Supabase Cloud
+        </button>
+      </div>
+    </div>
+    <p class="subtitle">Save links live — permanently stored in Supabase & synced in real-time across all devices.</p>
+    <div class="status-row">
+      <span class="live-pill pending" id="connStatus" title="Click to configure cloud sync">
+        <span class="beacon"></span> <span id="connText">Checking Supabase...</span>
+      </span>
+    </div>
   </header>
+
+  <!-- Setup banner shown when credentials aren't configured yet -->
+  <div class="setup-banner hidden" id="setupBanner">
+    <div class="banner-content">
+      <div class="banner-icon">⚡</div>
+      <div>
+        <strong>Keep Your Links Permanently Saved</strong>
+        <p>Connect Supabase so your saved links stay safe forever and never reset when the site sleeps!</p>
+      </div>
+    </div>
+    <button class="banner-btn" id="bannerSetupBtn">Connect Supabase (2 mins)</button>
+  </div>
 
   <form class="add-form" id="addForm" autocomplete="off" novalidate>
     <div class="inputs">
@@ -485,7 +864,7 @@
       <div class="divider"></div>
       <input type="text" id="titleInput" placeholder="Title (optional — auto-filled from link)" />
     </div>
-    <button type="submit" class="add-btn" id="addBtn" disabled>+ Add</button>
+    <button type="submit" class="add-btn" id="addBtn">+ Add</button>
   </form>
 
   <div class="live-preview" id="livePreview">
@@ -515,20 +894,102 @@
 
   <ul class="list" id="list"></ul>
 
-  <p class="footer-note">Cloud Synced · <span id="total">0</span> items · <span id="groupCount">0</span> groups</p>
+  <p class="footer-note">Permanent Cloud Sync · <span id="total">0</span> items · <span id="groupCount">0</span> groups</p>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
+<!-- Supabase Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">☁️ Supabase Cloud Database</div>
+      <button class="modal-close-btn" id="closeSettingsBtn" title="Close">✕</button>
+    </div>
+
+    <!-- Step 1: SQL Schema -->
+    <div class="modal-section">
+      <div class="section-label">1. Database Table & Realtime Setup</div>
+      <p class="section-desc">
+        Run this SQL once in your <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">Supabase Dashboard ↗</a> under <strong>SQL Editor</strong> to create the <code>items</code> table:
+      </p>
+      <div class="sql-box">
+        <button class="copy-sql-btn" id="copySqlBtn">📋 Copy SQL</button>
+        <pre class="sql-code" id="sqlCode">create table if not exists public.items (
+  id text primary key,
+  url text not null,
+  title text not null,
+  done boolean default false not null,
+  added_at bigint not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.items enable row level security;
+
+drop policy if exists "Allow all operations for anon" on public.items;
+create policy "Allow all operations for anon" on public.items
+  for all using (true) with check (true);
+
+do $$ begin
+  if not exists (
+    select 1 from pg_publication_tables 
+    where pubname = 'supabase_realtime' and tablename = 'items'
+  ) then
+    alter publication supabase_realtime add table public.items;
+  end if;
+end $$;</pre>
+      </div>
+    </div>
+
+    <!-- Step 2: Credentials -->
+    <div class="modal-section">
+      <div class="section-label">2. Supabase API Credentials</div>
+      <p class="section-desc">
+        Find these in your Supabase Dashboard: <strong>Project Settings → API</strong>.
+      </p>
+
+      <div class="field-group">
+        <label class="field-label" for="cfgUrl">Project URL</label>
+        <input type="text" class="field-input" id="cfgUrl" placeholder="https://your-project-id.supabase.co" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="cfgKey">Anon Public Key</label>
+        <input type="text" class="field-input" id="cfgKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." />
+      </div>
+    </div>
+
+    <div class="modal-status" id="modalStatus"></div>
+
+    <div class="modal-footer">
+      <button class="disconnect-btn" id="disconnectBtn" style="display:none;">Disconnect</button>
+      <div style="flex:1;"></div>
+      <button class="save-modal-btn" id="saveSettingsBtn">Connect & Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- Supabase SDK & Configuration -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+
 <script>
 (function () {
   "use strict";
 
   var VIEW_KEY = "watch-later-view";
+  var LOCAL_CACHE_KEY = "watch-later-items-cache";
+  var SB_URL_KEY = "watch-later-sb-url";
+  var SB_KEY_KEY = "watch-later-sb-key";
 
   var items  = [];
   var filter = "all";
   var query  = "";
   var view   = localStorage.getItem(VIEW_KEY) || "flat";
+
+  var sbClient = null;
+  var sbChannel = null;
 
   var form        = document.getElementById("addForm");
   var urlInput    = document.getElementById("urlInput");
@@ -552,48 +1013,37 @@
 
   var connStatus  = document.getElementById("connStatus");
   var connText    = document.getElementById("connText");
+  var setupBanner = document.getElementById("setupBanner");
+  var bannerSetupBtn = document.getElementById("bannerSetupBtn");
 
-  // Real-time Socket Connection
-  var socket = io();
-
-  socket.on('connect', function() {
-    connStatus.classList.remove('disconnected');
-    connText.textContent = "Live";
-    addBtn.disabled = false;
-  });
-
-  socket.on('disconnect', function() {
-    connStatus.classList.add('disconnected');
-    connText.textContent = "Offline";
-    addBtn.disabled = true;
-  });
-
-  socket.on('init', function(data) {
-    items = data;
-    render();
-  });
-
-  socket.on('itemAdded', function(item) {
-    if (!items.find(function(i) { return i.id === item.id; })) {
-      items.unshift(item);
-      render();
-    }
-  });
-
-  socket.on('itemUpdated', function(updatedItem) {
-    var it = items.find(function (i) { return i.id === updatedItem.id; });
-    if (it) {
-      it.done = updatedItem.done;
-      render();
-    }
-  });
-
-  socket.on('itemRemoved', function(id) {
-    items = items.filter(function (i) { return i.id !== id; });
-    render();
-  });
+  // Modal elements
+  var settingsModal   = document.getElementById("settingsModal");
+  var openSettingsBtn = document.getElementById("openSettingsBtn");
+  var closeSettingsBtn= document.getElementById("closeSettingsBtn");
+  var copySqlBtn      = document.getElementById("copySqlBtn");
+  var sqlCode         = document.getElementById("sqlCode");
+  var cfgUrl          = document.getElementById("cfgUrl");
+  var cfgKey          = document.getElementById("cfgKey");
+  var modalStatus     = document.getElementById("modalStatus");
+  var saveSettingsBtn = document.getElementById("saveSettingsBtn");
+  var disconnectBtn   = document.getElementById("disconnectBtn");
+  var toastEl         = document.getElementById("toast");
 
   /* ---------- Helpers ---------- */
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(function() {
+      toastEl.classList.remove("show");
+    }, 3200);
+  }
+
+  function setConnState(state, text) {
+    connStatus.className = "live-pill " + (state === "live" ? "" : state === "error" ? "disconnected" : "pending");
+    connText.textContent = text;
+  }
+
   function normalizeUrl(raw) {
     var url = String(raw).trim();
     if (!url) return "";
@@ -640,8 +1090,168 @@
     return d + "d ago";
   }
 
-  /* ---------- Actions ---------- */
-  function addItem(url, title) {
+  function saveLocalCache() {
+    try {
+      localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(items));
+    } catch (e) {}
+  }
+
+  function loadLocalCache() {
+    try {
+      var raw = localStorage.getItem(LOCAL_CACHE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return [];
+  }
+
+  /* ---------- Supabase Credentials Resolution ---------- */
+  function getCredentials() {
+    // 1. Check window.__SUPABASE_CONFIG__
+    var staticCfg = window.__SUPABASE_CONFIG__ || {};
+    var url = (staticCfg.url || "").trim() || (localStorage.getItem(SB_URL_KEY) || "").trim();
+    var key = (staticCfg.anonKey || "").trim() || (localStorage.getItem(SB_KEY_KEY) || "").trim();
+    return { url: url, key: key };
+  }
+
+  /* ---------- Supabase Connection & Realtime ---------- */
+  async function initSupabase() {
+    var creds = getCredentials();
+
+    if (!creds.url || !creds.key) {
+      // Not configured yet
+      setConnState("pending", "Setup Supabase");
+      setupBanner.classList.remove("hidden");
+      disconnectBtn.style.display = "none";
+      // Load local cache so user can still see and test items
+      items = loadLocalCache();
+      render();
+      return;
+    }
+
+    setupBanner.classList.add("hidden");
+    disconnectBtn.style.display = "inline-block";
+    setConnState("pending", "Connecting to Supabase...");
+
+    try {
+      if (!window.supabase || !window.supabase.createClient) {
+        throw new Error("Supabase JS library not loaded. Check internet connection.");
+      }
+
+      sbClient = window.supabase.createClient(creds.url, creds.key);
+
+      // Fetch items from table
+      var res = await sbClient
+        .from('items')
+        .select('*')
+        .order('added_at', { ascending: false });
+
+      if (res.error) {
+        throw res.error;
+      }
+
+      var cloudItems = (res.data || []).map(function (row) {
+        return {
+          id: row.id,
+          url: row.url,
+          title: row.title,
+          done: Boolean(row.done),
+          addedAt: Number(row.added_at) || Date.now()
+        };
+      });
+
+      // If user had local items not in cloud, sync them up
+      var localItems = loadLocalCache();
+      if (localItems.length > 0 && cloudItems.length === 0) {
+        // First sync: push local items to cloud
+        try {
+          var toInsert = localItems.map(function(item) {
+            return {
+              id: item.id,
+              url: item.url,
+              title: item.title,
+              done: item.done,
+              added_at: item.addedAt
+            };
+          });
+          await sbClient.from('items').insert(toInsert);
+          items = localItems;
+        } catch (syncErr) {
+          console.warn("Could not push local items to cloud:", syncErr);
+          items = cloudItems;
+        }
+      } else {
+        items = cloudItems;
+      }
+
+      saveLocalCache();
+      render();
+      setConnState("live", "Supabase Live");
+
+      // Subscribe to Realtime Postgres Changes
+      if (sbChannel) {
+        sbClient.removeChannel(sbChannel);
+      }
+
+      sbChannel = sbClient
+        .channel('public:items')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, function (payload) {
+          handleRealtimeEvent(payload);
+        })
+        .subscribe(function (status) {
+          if (status === 'SUBSCRIBED') {
+            setConnState("live", "Supabase Live");
+          } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            setConnState("error", "Realtime Reconnecting");
+          }
+        });
+
+    } catch (err) {
+      console.error("Supabase init error:", err);
+      setConnState("error", "Supabase Error");
+      // Fallback to local cache so user's experience is not broken
+      items = loadLocalCache();
+      render();
+
+      if (err.message && err.message.indexOf("relation \"public.items\" does not exist") !== -1) {
+        showToast("⚠️ Supabase connected, but 'items' table doesn't exist yet! Open Cloud Settings to copy the SQL.");
+      } else {
+        showToast("Supabase connection issue: " + (err.message || "Check settings"));
+      }
+    }
+  }
+
+  function handleRealtimeEvent(payload) {
+    if (payload.eventType === 'INSERT' && payload.new) {
+      var newItem = {
+        id: payload.new.id,
+        url: payload.new.url,
+        title: payload.new.title,
+        done: Boolean(payload.new.done),
+        addedAt: Number(payload.new.added_at) || Date.now()
+      };
+      if (!items.find(function (i) { return i.id === newItem.id; })) {
+        items.unshift(newItem);
+        saveLocalCache();
+        render();
+      }
+    } else if (payload.eventType === 'UPDATE' && payload.new) {
+      var it = items.find(function (i) { return i.id === payload.new.id; });
+      if (it) {
+        it.done = Boolean(payload.new.done);
+        it.title = payload.new.title;
+        it.url = payload.new.url;
+        saveLocalCache();
+        render();
+      }
+    } else if (payload.eventType === 'DELETE' && payload.old) {
+      items = items.filter(function (i) { return i.id !== payload.old.id; });
+      saveLocalCache();
+      render();
+    }
+  }
+
+  /* ---------- Actions (Create, Update, Delete) ---------- */
+  async function addItem(url, title) {
     var cleanUrl = normalizeUrl(url);
     if (!cleanUrl) return;
     var host = getHost(cleanUrl);
@@ -652,26 +1262,63 @@
       done: false,
       addedAt: Date.now()
     };
+
     // Optimistic Update
     items.unshift(item);
+    saveLocalCache();
     render();
-    // Emit to server
-    socket.emit('addItem', item);
-  }
 
-  function toggleDone(id) {
-    var it = items.find(function (i) { return i.id === id; });
-    if (it) { 
-      it.done = !it.done; 
-      render(); 
-      socket.emit('toggleItem', id);
+    // Persist to Supabase if connected
+    if (sbClient) {
+      try {
+        var res = await sbClient.from('items').insert([{
+          id: item.id,
+          url: item.url,
+          title: item.title,
+          done: item.done,
+          added_at: item.addedAt
+        }]);
+        if (res.error) throw res.error;
+      } catch (e) {
+        console.error("Supabase insert error:", e);
+        showToast("Saved locally. Supabase error: " + (e.message || "Failed to sync"));
+      }
+    } else {
+      showToast("Saved locally. Connect Supabase to keep permanently!");
     }
   }
 
-  function removeItem(id) {
-    items = items.filter(function (i) { return i.id !== id; });
+  async function toggleDone(id) {
+    var it = items.find(function (i) { return i.id === id; });
+    if (!it) return;
+
+    it.done = !it.done;
+    saveLocalCache();
     render();
-    socket.emit('removeItem', id);
+
+    if (sbClient) {
+      try {
+        var res = await sbClient.from('items').update({ done: it.done }).eq('id', id);
+        if (res.error) throw res.error;
+      } catch (e) {
+        console.error("Supabase update error:", e);
+      }
+    }
+  }
+
+  async function removeItem(id) {
+    items = items.filter(function (i) { return i.id !== id; });
+    saveLocalCache();
+    render();
+
+    if (sbClient) {
+      try {
+        var res = await sbClient.from('items').delete().eq('id', id);
+        if (res.error) throw res.error;
+      } catch (e) {
+        console.error("Supabase delete error:", e);
+      }
+    }
   }
 
   /* ---------- Filter + search ---------- */
@@ -825,6 +1472,100 @@
     }
   }
 
+  /* ---------- Modal Interactions ---------- */
+  function openModal() {
+    var creds = getCredentials();
+    cfgUrl.value = creds.url;
+    cfgKey.value = creds.key;
+    modalStatus.className = "modal-status";
+    modalStatus.textContent = "";
+    settingsModal.classList.add("open");
+  }
+
+  function closeModal() {
+    settingsModal.classList.remove("open");
+  }
+
+  openSettingsBtn.addEventListener("click", openModal);
+  closeSettingsBtn.addEventListener("click", closeModal);
+  bannerSetupBtn.addEventListener("click", openModal);
+  connStatus.addEventListener("click", openModal);
+
+  settingsModal.addEventListener("click", function(e) {
+    if (e.target === settingsModal) closeModal();
+  });
+
+  copySqlBtn.addEventListener("click", function() {
+    var code = sqlCode.textContent;
+    navigator.clipboard.writeText(code).then(function() {
+      copySqlBtn.textContent = "✓ Copied!";
+      showToast("SQL setup script copied to clipboard!");
+      setTimeout(function() { copySqlBtn.textContent = "📋 Copy SQL"; }, 2000);
+    }).catch(function() {
+      showToast("Please copy manually from the box.");
+    });
+  });
+
+  saveSettingsBtn.addEventListener("click", async function() {
+    var url = cfgUrl.value.trim();
+    var key = cfgKey.value.trim();
+
+    if (!url || !key) {
+      modalStatus.className = "modal-status error";
+      modalStatus.textContent = "Please enter both your Supabase Project URL and Anon Key.";
+      return;
+    }
+
+    modalStatus.className = "modal-status loading";
+    modalStatus.textContent = "Testing connection to Supabase...";
+
+    try {
+      var testClient = window.supabase.createClient(url, key);
+      var res = await testClient.from('items').select('*').limit(1);
+
+      if (res.error) {
+        if (res.error.message && res.error.message.indexOf('relation "public.items" does not exist') !== -1) {
+          throw new Error("Connected to Supabase, but the 'items' table was not found! Please run the SQL setup script (Step 1) in your Supabase SQL Editor.");
+        }
+        throw res.error;
+      }
+
+      // Save to localStorage
+      localStorage.setItem(SB_URL_KEY, url);
+      localStorage.setItem(SB_KEY_KEY, key);
+
+      modalStatus.className = "modal-status success";
+      modalStatus.textContent = "✓ Connected successfully! Cloud sync is active.";
+      showToast("Supabase cloud database connected!");
+
+      setTimeout(function() {
+        closeModal();
+        initSupabase();
+      }, 1000);
+
+    } catch (e) {
+      console.error(e);
+      modalStatus.className = "modal-status error";
+      modalStatus.textContent = "Connection failed: " + (e.message || "Invalid URL or Key");
+    }
+  });
+
+  disconnectBtn.addEventListener("click", function() {
+    if (confirm("Disconnect Supabase? Links will no longer sync with the cloud.")) {
+      localStorage.removeItem(SB_URL_KEY);
+      localStorage.removeItem(SB_KEY_KEY);
+      if (sbChannel && sbClient) {
+        sbClient.removeChannel(sbChannel);
+      }
+      sbClient = null;
+      sbChannel = null;
+      closeModal();
+      showToast("Disconnected from Supabase.");
+      initSupabase();
+    }
+  });
+
+  /* ---------- App Form & List Events ---------- */
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var url = urlInput.value.trim();
@@ -890,7 +1631,10 @@
   Array.prototype.forEach.call(viewToggle.querySelectorAll(".view-btn"), function (b) {
     b.classList.toggle("active", b.dataset.view === view);
   });
-  render();
+
+  // Start app
+  initSupabase();
+
 })();
 </script>
 </body>
